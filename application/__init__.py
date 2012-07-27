@@ -1,5 +1,10 @@
+
+    
 from flask import Flask
-from flask.ext.sqlalchemy import SQLAlchemy
+try:
+  from flaskext.sqlalchemy import SQLAlchemy
+except ImportError:
+  from flask.ext.sqlalchemy import SQLAlchemy
 
 app = Flask('application')
 app.config.from_object('application.settings')
