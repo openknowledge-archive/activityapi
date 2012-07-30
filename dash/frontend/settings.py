@@ -1,6 +1,6 @@
 import os
-from dash.backend.settings import LOG_LEVEL
 
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'DEBUG')
 DEBUG = True
 TESTING = True
 
