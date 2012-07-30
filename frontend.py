@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 from dash.frontend import app
 
