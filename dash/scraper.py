@@ -28,17 +28,3 @@ def scrape_members( url ):
     print map(str,twitters)
 
 
-def scrape_tweets( url, username, since_id='', commit=False):
-    payload = { 'q' : 'from:%s'%username }
-    if since_id:
-        payload['since_id'] = since_id
-    obj = _json(url,payload=payload)
-    print 'Got %d tweets from %s' % ( len(obj['results']), username )
-    for tweet in obj['results']:
-        s = "Tweet: '%s'\t\t'%s'\t'%s'\t'%s'"
-        s %= (  tweet['from_user'],
-                    tweet['id_str'],
-                    tweet['created_at'],
-                    tweet['text'][:15]+'...')
-        print s
-
