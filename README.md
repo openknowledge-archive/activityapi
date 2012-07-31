@@ -21,7 +21,7 @@ http://dash2.herokuapp.com
 #### Run the Timestamp scraper (debug)
 
     # This simple scraper will populate the database 
-    # with an extra roweach time it is run:
+    # with an extra row each time it is run:
     ./scrape_timestamp.py
 
 #### Run the Twitter scraper
