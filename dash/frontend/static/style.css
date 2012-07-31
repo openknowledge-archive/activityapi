@@ -1,0 +1,20 @@
+body {
+    background: #eee;
+}
+.subcontainer {
+    background: #fff;
+    width: 400px;
+    padding: 50px;
+    margin-top: 40px;
+}
+footer {
+    font-size: 10px;
+    border-top: 1px solid #ccc;
+    margin-top: 50px;
+    line-height: 12px;
+    padding-top: 5px;
+    margin-bottom: 40px;
+}
+footer p {
+    margin-bottom: 4px;
+}

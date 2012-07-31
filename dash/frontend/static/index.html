@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <title>OKFN: Activity API</title>
+    <link rel="stylesheet" type="text/css" href="static/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="static/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="subcontainer">
+        <header>
+          <h1>OKFN Activity API</h1>
+        </header>
+        <br/>
+        <h4>API Endpoints&nbsp;&nbsp; <small style="float: right;">All endpoints are served in JSON format.</small></h4>
+        <dl>
+          <dt><a href="/api">/api</a></dt>
+          <dd>Check the health of the API.</dd>
+        </dl>
+        <dl>
+          <dt><a href="/api/twitter">/twitter</a></dt>
+          <dd>Twitter "firehose" of data from community members.</dd>
+        </dl>
+        <dl>
+          <dt><a href="/api/timestamps">/timestamps</a></dt>
+          <dd>(for debug): Timestamps updated once per ten minutes in a regular cron job.</dd>
+        </dl>
+        <footer>
+          <p>The Activity API runs on <a href="http://www.heroku.com/">Heroku</a> cloud servers.</p>
+          <p>Its architecture consists of a front-end dyno running a <a href="http://flask.pocoo.org/">Flask</a> webserver, with multiple scheduled worker threads maintaining a <a href="http://www.postgresql.org/">PostgreSQL</a> database.</p>
+        </footer>
+      </div>
+    </div>
+
+  </body>
+</html>
