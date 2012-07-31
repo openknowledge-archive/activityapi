@@ -53,17 +53,15 @@ def all_members(api,lst):
 def all_tweets_since(api,lst,since):
     """Grab hold of the twitter firehose for a given list"""
     c = tweepy.Cursor(api.list_timeline,lst.user.screen_name,lst.slug,since_id=since)
-    return [x for x in c.items()]
+    return c.items()
 
-def scrape_tweets():
+def scrape_tweets(since=''):
     api = get_api()
-    q = Session.query( func.max(Tweet.tweet_id) )
-    if q.count():
+    if not since:
+        q = Session.query( func.max(Tweet.tweet_id) )
+        if not q.count():
+            raise ValueError('No tweets exist in the database. Which tweet_id should I start from?')
         since = q.first()[0]
-    else:
-        print 'WARNING: No tweets exist in the database.'
-        # Default: 6pm on the day I wrote this
-        since = '230364073445978112'
     lists = { x.name : x for x in api.lists() }
     assert all( [lists[x] for x in LISTS] )
     # Poll each list and flush it to the database

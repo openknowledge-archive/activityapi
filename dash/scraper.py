@@ -17,7 +17,6 @@ def scrape_timestamp():
     Session.add(t)
     Session.commit()
 
-
 def scrape_members( url ):
     obj = _json(url)
     print 'Received %d rows from database.' % len(obj)
