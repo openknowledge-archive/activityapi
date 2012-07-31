@@ -13,3 +13,17 @@ Possible Sources
 TODO
 ----
 `wordpress_dump` to become top-level repo
+
+
+Table Structure
+---------------
+CREATE TABLE tweets (
+    id SERIAL NOT NULL, 
+    tweet_id BIGINT, 
+    timestamp TIMESTAMP WITHOUT TIME ZONE, 
+    geo_x FLOAT, 
+    geo_y FLOAT, 
+    screen_name VARCHAR, 
+    text VARCHAR, 
+    PRIMARY KEY (id)
+)
