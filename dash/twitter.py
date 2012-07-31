@@ -59,9 +59,10 @@ def scrape_tweets(since=''):
     api = get_api()
     if not since:
         q = Session.query( func.max(Tweet.tweet_id) )
-        if not q.count():
-            raise ValueError('No tweets exist in the database. Which tweet_id should I start from?')
         since = q.first()[0]
+        if not since:
+            raise ValueError('No tweets exist in the database. Which tweet_id should I start from?')
+        print 'Last known tweet_id:',since
     lists = { x.name : x for x in api.lists() }
     assert all( [lists[x] for x in LISTS] )
     # Poll each list and flush it to the database
@@ -83,7 +84,7 @@ def scrape_tweets(since=''):
             print '  -> List yielded %d tweets' % sub_count
         except Exception as e:
             print 'Exception while polling %s: %s' % (x, str(e))
-        print '=> Got %d tweets total' % full_count
+    print '=> Got %d tweets total' % full_count
 
 
 def names_cached(): 
