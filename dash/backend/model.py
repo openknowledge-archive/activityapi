@@ -36,5 +36,18 @@ class Tweet(Base):
             except IndexError:
                 print 'ERROR handling geo: %s' % raw_tweet.geo
         return out
+    def get_geo(self):
+        if self.geo_x and self.geo_y:
+            return [self.geo_x, self.geo_y]
+
+    def json(self):
+        return {
+            'id': self.id,
+            'tweet_id': self.tweet_id,
+            'timestamp': self.timestamp.isoformat(),
+            'screen_name': self.screen_name,
+            'geo': self.get_geo(),
+            'text':self.text
+        }
 
 Base.metadata.create_all()

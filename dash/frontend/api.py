@@ -6,8 +6,15 @@ def index():
     return json.dumps({'version':'0.1','ok':True})
 
 def twitter():
-    out = {'hello':'world'}
-    return json.dumps(out)
+    limit = 50
+    count = Session.query(Tweet).count()
+    q = Session.query(Tweet).order_by(Tweet.tweet_id.desc()).limit(limit)
+    data = { 
+        'total': count, 
+        'limit': limit, 
+        'data': [ tweet.json() for tweet in q ] 
+    }
+    return json.dumps(data)
 
 def timestamps():
     limit = 10
