@@ -16,6 +16,11 @@ def twitter():
     }
     return json.dumps(data)
 
+def twitter_ratelimit():
+    import dash.twitter
+    api = dash.twitter.get_api()
+    return json.dumps( api.rate_limit_status() )
+
 def timestamps():
     limit = 10
     count = Session.query(Timestamp).count()
