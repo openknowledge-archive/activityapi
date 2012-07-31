@@ -1,4 +1,3 @@
-import views
 import api
 from dash.frontend import app
 
