@@ -22,3 +22,23 @@ def clean_twitter(t):
         if set(t).issubset(valid):
             return t
 
+def freq_table(tweets):
+    freq = {}
+    regex = re.compile(r'[\w:/#\.]+')
+    for tweet in tweets:
+        text = tweet.text
+        for match in regex.finditer(tweet.text):
+            word = match.group(0)
+            freq[word] = freq.get(word,0) + 1
+    return freq
+
+def analyse(freq_table, min_word_length=7, min_matches=3, results=10, links=False, hashtags=False):
+    if hashtags:
+        f = {x:y for (x,y) in freq_table.items() if x[0]=='#'}
+    elif links:
+        f = {x:y for (x,y) in freq_table.items() if x[:5]=='http:'}
+    else:
+        f = {x:y for (x,y) in freq_table.items() if len(x) > min_word_length and y>min_matches}
+    f = sorted( f.items(), key=lambda x:x[1], reverse=True)[:results]
+    return f
+

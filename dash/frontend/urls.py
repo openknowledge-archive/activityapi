@@ -8,5 +8,6 @@ def homepage():
 app.add_url_rule('/api/', 'api', view_func=api.index, methods=('POST', 'GET'))
 app.add_url_rule('/api/twitter', 'api.twitter', view_func=api.twitter)
 app.add_url_rule('/api/twitter/ratelimit', 'api.twitter.ratelimit', view_func=api.twitter_ratelimit)
+app.add_url_rule('/api/twitter/trends', 'api.twitter.trends', view_func=api.twitter_trends)
 app.add_url_rule('/api/timestamps', 'api.timestamps', view_func=api.timestamps)
 
