@@ -18,7 +18,8 @@ def analyse(freq_table, min_word_length=7, min_matches=3, results=10, links=Fals
     elif links:
         f = {x:y for (x,y) in freq_table.items() if x[:5]=='http:'}
     else:
-        f = {x:y for (x,y) in freq_table.items() if len(x) > min_word_length and y>min_matches}
-    f = sorted( f.items(), key=lambda x:x[1], reverse=True)[:results]
-    return f
+        f = {x:y for (x,y) in freq_table.items() if len(x) > min_word_length }
+    tuples = filter( lambda x:x[1]>min_matches, f.items() )
+    tuples = sorted( tuples, key=lambda x:x[1], reverse=True)[:results]
+    return tuples
 
