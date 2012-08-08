@@ -1,7 +1,8 @@
 from dash.backend import Session, model
-import dash.util
 import requests
 import json
+import string
+import re
 
 def _json(url,payload=None,verbose=True):
     r = requests.get( url, params=payload )
@@ -17,6 +18,12 @@ def _clean_user(user):
             user[k]=None
     user['_twitter'] = user['twitter']
     user['twitter'] = _clean_twitter(user['twitter'])
+    # Also clean?
+    # user_login
+    # location
+    # display_name
+    # website
+    # is_filthy_fucking_spammer
 
 def _clean_twitter(t):
     valid = set(string.letters + string.digits + '_')
@@ -30,13 +37,13 @@ def _clean_twitter(t):
         if set(t).issubset(valid):
             return t
 
-def scrape_members( url ):
+def scrape_database( url ):
     obj = _json(url)
     print 'Received %d rows from database.' % len(obj)
     map(_clean_user, obj)
 
     twitters = filter(bool, [ user['twitter'] for user in obj ])
-    #print 'Got %d valid Twitter handles: %s...' % (len(twitters), ', '.join(twitters[:8]))
-    print map(str,twitters)
+    from pprint import pprint
+    pprint(obj[0].keys())
 
 
