@@ -34,6 +34,17 @@ http://dash2.herokuapp.com
     # You can then run the scraper:
     ./scrape_twitter.py
 
-In Production
--------------
+## In Production
 The system is deployed on Heroku. `Procfile` declares the web frontend to be run. The Scheduler add-on runs each of the `scrape_*.py` scripts at regular intervals to keep the database up-to-date.
+
+## Interactive Mode
+
+You can interact with the database and scrapers via Python's interactive terminal. For example:
+
+    (%activityapi)$ DATABASE_URL=postgresql://localhost/zephod python
+    Python 2.7.1 (r271:86832, Jun 16 2011, 16:59:05) 
+    [GCC 4.2.1 (Based on Apple Inc. build 5658) (LLVM build 2335.15.00)] on darwin
+    Type "help", "copyright", "credits" or "license" for more information.
+    >>> from dash import backend
+    >>> 
+
