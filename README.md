@@ -46,5 +46,32 @@ You can interact with the database and scrapers via Python's interactive termina
     [GCC 4.2.1 (Based on Apple Inc. build 5658) (LLVM build 2335.15.00)] on darwin
     Type "help", "copyright", "credits" or "license" for more information.
     >>> from dash import backend
-    >>> 
 
+Pull tweets from the database:
+
+    >>> query = backend.Session.query(backend.model.Tweet).limit(5)
+    >>> query[0].json()
+    {'screen_name': u'rabble', 'text': u"I've watched it streamed, but this year i plan on attending the rebranded Lean Startup Conference. http://t.co/YanScM8E Dec 3-4", 'tweet_id': 230419555657338880L, 'timestamp': '2012-07-31T21:47:57', 'geo': None, 'id': 6}
+
+Scrape tweets into the database: (pass a minimum tweet\_id the first time you do this, otherwise you'll download all history)
+
+    >>> from dash import twitter
+    >>> twitter.scrape_tweets()
+    Last known tweet_id: 230428104940720128
+    Polling list okfn_0_9...
+      -> List yielded 31 tweets
+    Polling list okfn_a_d...
+      -> List yielded 582 tweets
+    Polling list okfn_e_j...
+      -> List yielded 579 tweets
+    Polling list okfn_k_r...
+    Exception while polling okfn_k_r: IncompleteRead(2896 bytes read, 32001 more expected)
+    Polling list okfn_s_z...
+      -> List yielded 572 tweets
+    => Got 1816 tweets total
+
+How many twitter API hits remain?
+
+    >>> import json
+    >>> json.dumps( twitter.get_api().rate_limit_status() )
+    '{"reset_time": "Tue Aug 21 15:29:48 +0000 2012", "remaining_hits": 215, "reset_time_in_seconds": 1345562988, "hourly_limit": 350, "photos": {"daily_limit": 30, "reset_time": "Wed Aug 22 14:45:01 +0000 2012", "remaining_hits": 30, "reset_time_in_seconds": 1345646701}}'
