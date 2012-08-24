@@ -41,6 +41,7 @@ class Tweet(Base):
             return [self.geo_x, self.geo_y]
 
     def json(self):
+        out = self.__dict__
         return {
             'id': self.id,
             'tweet_id': self.tweet_id,
@@ -49,5 +50,38 @@ class Tweet(Base):
             'geo': self.get_geo(),
             'text':self.text
         }
+
+class Person(Base):
+    __tablename__='people'
+    id = Column(Integer, primary_key=True)
+    website = Column(String)
+    about = Column(String)
+    user_id = Column(Integer)
+    last_active = Column(String)
+    twitter = Column(String)
+    registered = Column(String)
+    permalink = Column(String)
+    location = Column(String)
+    display_name = Column(String)
+    login = Column(String)
+    email = Column(String)
+    avatar = Column(String)
+    _opinion = Column(String)
+    _projects = Column(String)
+    @classmethod
+    def parse(cls, source_dict):
+        out = cls()
+        for (k,v) in source_dict.items():
+            out.__setattr__(k, v)
+        return out
+
+    def json(self):
+        out = { x:self.__getattribute__(x) for x in Person.buddypress_fields }
+        return out
+
+Person.buddypress_fields = [ 'website', 'about', 'user_id', 
+'last_active', 'twitter', 'registered', 
+'permalink', 'location', 'display_name', 
+'login', 'email', 'avatar', ]
 
 Base.metadata.create_all()

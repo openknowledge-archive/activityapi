@@ -1,6 +1,13 @@
 import csv
 import re
 import string
+import json
+import requests
+
+def download_json(url,payload=None):
+    r = requests.get( url, params=payload )
+    assert r.status_code==200
+    return json.loads( r.text )
 
 def freq_table(tweets):
     freq = {}
