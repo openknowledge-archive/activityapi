@@ -1,7 +1,5 @@
 import tweepy
 import os
-import re
-import string
 from dash.backend import Session
 from dash.backend.model import Tweet
 from sqlalchemy import func
@@ -24,18 +22,6 @@ def read_people_table():
     #pprint(obj[0].keys())
     pass
 
-def _clean_username(t):
-    """Clean up a handle received from the BuddyPress database"""
-    valid = set(string.letters + string.digits + '_')
-    if t: 
-        t = t.lower().strip()
-        if t[0]=='@':
-            t=t[1:]
-        if 'twitter.com' in t:
-            t = t.split('/')[-1]
-        t = re.compile('[, ]').split(t)[0]
-        if set(t).issubset(valid):
-            return t
 
 def which_list(username):
     """Look up which partitioned list is used to monitor this user"""

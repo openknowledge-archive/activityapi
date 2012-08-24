@@ -1,30 +1,15 @@
 from dash.backend import Session, model
 import util
+import string
+import re
 
 def scrape_remote( url , payload=None, verbose=False):
     obj = util.download_json(url,payload)
     users = obj['users']
     if verbose:
         print 'Received %d rows from database.' % len(users)
-    def clean(user):
-        user['user_id'] = int(user['user_id'])
-        for (k,v) in user.items():
-            if v==False: user[k] = None
-    map(clean,users)
+    map(_clean,users)
     return { x['user_id']:x for x in users }
-
-def _diff(person, data, verbose=False):
-    changed = False
-    for (k,v) in data.items():
-        old = person.__getattribute__(k)
-        if not old==v:
-            if verbose:
-                print 'Updating %s for user %s (%s)' % (k,data['login'],data['display_name'])
-                print '  Old->New :: %s (%s)->%s (%s)' % (old, type(old), v, type(v))
-            changed = True
-            person.__setattr__(k,v)
-    if changed:
-        Session.add(person)
 
 def update_local( usermap, verbose=False ):
     addme = set(usermap.keys())
@@ -44,10 +29,38 @@ def update_local( usermap, verbose=False ):
     Session.commit()
 
 
+## Util methods
 
+def _clean(user):
+    user['user_id'] = int(user['user_id'])
+    user['_twitter'] = user['twitter']
+    user['twitter'] = _clean_twitter(user['twitter'])
+    for (k,v) in user.items():
+        if v==False: user[k] = None
 
+def _clean_twitter(t):
+    """Clean up a handle received from the BuddyPress database"""
+    valid = set(string.letters + string.digits + '_')
+    if t: 
+        t = t.lower().strip()
+        if t[0]=='@':
+            t=t[1:]
+        if 'twitter.com' in t:
+            t = t.split('/')[-1]
+        t = re.compile('[, ]').split(t)[0]
+        if set(t).issubset(valid):
+            return t
 
-
-
-
+def _diff(person, data, verbose=False):
+    changed = False
+    for (k,v) in data.items():
+        old = person.__getattribute__(k)
+        if not old==v:
+            if verbose:
+                print 'Updating %s for user %s (%s)' % (k,data['login'],data['display_name'])
+                print '  Old->New :: %s (%s)->%s (%s)' % (old, type(old), v, type(v))
+            changed = True
+            person.__setattr__(k,v)
+    if changed:
+        Session.add(person)
 

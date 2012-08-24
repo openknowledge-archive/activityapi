@@ -68,6 +68,7 @@ class Person(Base):
     avatar = Column(String)
     _opinion = Column(String)
     _projects = Column(String)
+    _twitter = Column(String)
     @classmethod
     def parse(cls, source_dict):
         out = cls()
