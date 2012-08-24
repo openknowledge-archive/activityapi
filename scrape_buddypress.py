@@ -5,8 +5,7 @@ import argparse
 import os
 import random
 
-
-if __name__=='__main__':
+def main():
     auth_hash = os.environ.get('BUDDYPRESS_AUTH_HASH')
     parser = argparse.ArgumentParser(description='Scrape the buddypress user DB into our activity DB')
     parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='Verbose output')
@@ -22,3 +21,6 @@ if __name__=='__main__':
         raise ValueError('Expected a lot more users than that (got %d). Something is wrong.' % len(usermap))
     dash.buddypress.update_local(usermap,arg.verbose)
 
+
+if __name__=='__main__':
+    main()
