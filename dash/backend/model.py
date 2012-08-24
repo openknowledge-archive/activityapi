@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column,Integer,String,DateTime,BigInteger,Float
+from sqlalchemy import Column,Integer,String,DateTime,BigInteger,Float,ForeignKey
 from . import engine
 
 Base = declarative_base(bind=engine)
@@ -79,6 +79,13 @@ class Person(Base):
     def json(self):
         out = { x:self.__getattribute__(x) for x in Person.buddypress_fields }
         return out
+
+class PersonDiff(Base):
+    __tablename__='person_diff'
+    id = Column(Integer, primary_key=True)
+    login = Column(String)
+    type = Column(String)
+    more_info = Column(String)
 
 Person.buddypress_fields = [ 'website', 'about', 'user_id', 
 'last_active', 'twitter', 'registered', 
