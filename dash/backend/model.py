@@ -1,6 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column,Integer,String,DateTime,BigInteger,Float,ForeignKey
 from . import engine
+import json
 
 Base = declarative_base(bind=engine)
 
@@ -85,7 +86,19 @@ class PersonDiff(Base):
     id = Column(Integer, primary_key=True)
     login = Column(String)
     type = Column(String)
-    more_info = Column(String)
+    timestamp = Column(String)
+    json = Column(String)
+    def __init__(self, type, person, metadata={}, timestamp=None):
+        if not timestamp:
+            import datetime
+            timestamp = datetime.datetime.now()
+        self.login = person.login
+        self.timestamp = timestamp
+        self.type = type
+        metadata['display_name'] = person.display_name
+        self.json = json.dumps(metadata)
+    def __repr__(self):
+        return 'Persondiff [type=%s timestamp=%s login=%s json=%s]' % (self.type,self.timestamp,self.login,self.json)
 
 Person.buddypress_fields = [ 'website', 'about', 'user_id', 
 'last_active', 'twitter', 'registered', 

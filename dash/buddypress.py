@@ -3,6 +3,7 @@ import util
 import string
 import re
 
+
 def scrape_remote( url , payload=None, verbose=False):
     obj = util.download_json(url,payload)
     users = obj['users']
@@ -19,15 +20,19 @@ def update_local( usermap, verbose=False ):
             _diff(existing, usermap[user_id], verbose)
             addme.remove( user_id )
         else:
+            diff = model.PersonDiff('delete',existing)
+            Session.add(diff)
             if verbose:
-                print 'deleting id=%d (login=%s, name=%s)' % (existing.user_id,existing.login,existing.display_name)
+                print diff
             Session.delete(existing)
     for x in addme:
         user = usermap[x]
-        if verbose:
-            print 'adding id=%d (login=%s, name=%s)' % (x,user['login'],user['display_name'])
         person = model.Person.parse(user)
         Session.add(person)
+        diff = model.PersonDiff('add',person)
+        Session.add(diff)
+        if verbose:
+            print diff
     Session.commit()
 
 
@@ -54,13 +59,18 @@ def _clean_twitter(t):
             return t
 
 def _diff(person, data, verbose=False):
+    """Update the model with new key/value pairs"""
     changed = False
     for (k,v) in data.items():
         old = person.__getattribute__(k)
         if not old==v:
+            # I like to track changes people make to their profiles
+            diff = model.PersonDiff('update',person, {'attribute':k,'old_value':old,'new_value':v})
+            if not k[0]=='_':
+                # Don't store a diff if I update stupid fields like '_twitter' 
+                Session.add(diff)
             if verbose:
-                print 'Updating %s for user %s (%s)' % (k,data['login'],data['display_name'])
-                print '  Old->New :: %s (%s)->%s (%s)' % (old, type(old), v, type(v))
+                print diff
             changed = True
             person.__setattr__(k,v)
     if changed:
