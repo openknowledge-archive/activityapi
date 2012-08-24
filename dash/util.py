@@ -7,7 +7,12 @@ import requests
 def download_json(url,payload=None):
     r = requests.get( url, params=payload )
     assert r.status_code==200
-    return json.loads( r.text )
+    try:
+        return json.loads( r.text )
+    except ValueError:
+        print 'bad json:'
+        print r.text
+        raise ValueError('No JSON object could be decoded.')
 
 def freq_table(tweets):
     freq = {}

@@ -19,11 +19,13 @@ def update_local( usermap, verbose=False ):
             _diff(existing, usermap[user_id], verbose)
             addme.remove( user_id )
         else:
-            print 'deleting id=%d (login=%s, name=%s)' % (existing.user_id,existing.login,existing.display_name)
+            if verbose:
+                print 'deleting id=%d (login=%s, name=%s)' % (existing.user_id,existing.login,existing.display_name)
             Session.delete(existing)
     for x in addme:
         user = usermap[x]
-        print 'adding id=%d (login=%s, name=%s)' % (x,user['login'],user['display_name'])
+        if verbose:
+            print 'adding id=%d (login=%s, name=%s)' % (x,user['login'],user['display_name'])
         person = model.Person.parse(user)
         Session.add(person)
     Session.commit()
