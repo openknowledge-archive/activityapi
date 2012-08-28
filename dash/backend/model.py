@@ -76,13 +76,10 @@ class Person(Base):
         for (k,v) in source_dict.items():
             out.__setattr__(k, v)
         return out
-
     def json(self):
-        fields = [  'website', 'user_id', 
-                    'last_active', 'twitter', 'registered', 
-                    'permalink', 'location', 'display_name', 
-                    'login', 'email' ]
-        fields = ['login', 'permalink', 'avatar']
+        fields = [  'website', 'about', 'user_id', 'last_active',
+                    'twitter', 'registered', 'permalink', 'location',
+                    'display_name', 'login', 'email', 'avatar']
         out = { x:self.__getattribute__(x) for x in fields }
         return out
 

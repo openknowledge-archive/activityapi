@@ -49,7 +49,6 @@ def _clean(user):
 def _clean_avatar(avatar):
     """Clean up an avatar received from the BuddyPress database"""
     r = re.compile('<img[^>]*src="([^"]*)')
-
     match = r.search(avatar)
     if match:
         out = match.group(1)
