@@ -41,9 +41,20 @@ def update_local( usermap, verbose=False ):
 def _clean(user):
     user['user_id'] = int(user['user_id'])
     user['_twitter'] = user['twitter']
+    user['avatar'] = _clean_avatar(user['avatar'])
     user['twitter'] = _clean_twitter(user['twitter'])
     for (k,v) in user.items():
         if v==False: user[k] = None
+
+def _clean_avatar(avatar):
+    """Clean up an avatar received from the BuddyPress database"""
+    r = re.compile('<img[^>]*src="([^"]*)')
+
+    match = r.search(avatar)
+    if match:
+        out = match.group(1)
+        if not 'mystery-man' in out:
+            return match.group(1)
 
 def _clean_twitter(t):
     """Clean up a handle received from the BuddyPress database"""
