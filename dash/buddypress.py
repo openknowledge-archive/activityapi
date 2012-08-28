@@ -42,9 +42,16 @@ def _clean(user):
     user['user_id'] = int(user['user_id'])
     user['_twitter'] = user['twitter']
     user['avatar'] = _clean_avatar(user['avatar'])
+    user['website'] = _clean_website(user['website'])
     user['twitter'] = _clean_twitter(user['twitter'])
     for (k,v) in user.items():
         if v==False: user[k] = None
+
+def _clean_website(website):
+    """Clean up a website address from the Buddypress database"""
+    if website and not website[:4]=='http':
+        return 'http://'+website
+    return website
 
 def _clean_avatar(avatar):
     """Clean up an avatar received from the BuddyPress database"""
