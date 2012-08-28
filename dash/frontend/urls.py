@@ -1,13 +1,16 @@
-import api
+import api1
+import json
 from dash.frontend import app
+from flask import request
 
 @app.route('/')
 def homepage():
     return app.send_static_file('index.html')
 
-app.add_url_rule('/api/', 'api', view_func=api.index, methods=('POST', 'GET'))
-app.add_url_rule('/api/twitter', 'api.twitter', view_func=api.twitter)
-app.add_url_rule('/api/twitter/ratelimit', 'api.twitter.ratelimit', view_func=api.twitter_ratelimit)
-app.add_url_rule('/api/twitter/trends', 'api.twitter.trends', view_func=api.twitter_trends)
-app.add_url_rule('/api/timestamps', 'api.timestamps', view_func=api.timestamps)
-
+@app.route('/api/')
+def api_no_version():
+    data = { 
+            'error': 'No API version supplied', 
+            'v1': request.url_root+'api/1/',
+            }
+    return json.dumps(data)

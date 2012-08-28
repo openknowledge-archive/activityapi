@@ -12,19 +12,21 @@
           <h1>OKFN Activity API</h1>
         </header>
         <br/>
-        <h4>API Endpoints&nbsp;&nbsp; <small style="float: right;">All endpoints are served in JSON format.</small></h4>
+        <h4>Version 1 Endpoints&nbsp;&nbsp; <small style="float: right;">All endpoints are served in JSON format.</small></h4>
         <dl>
-          <dt><a href="/api">/api</a></dt>
+          <dt><a href="/api/1/">/api/1/</a></dt>
           <dd>Check the health of the API.</dd>
         </dl>
         <dl>
-          <dt><a href="/api/twitter">/api/twitter</a></dt>
-          <dd>Twitter "firehose" of data from community members.</dd>
-          <dt><a href="/api/twitter/trends">/api/twitter/trends</a></dt>
+          <dt><a href="/api/1/twitter/tweets">/api/1/twitter/tweets</a></dt>
+          <dd>Twitter "firehose" of tweets from community members.</dd>
+          <dt><a href="/api/1/twitter/trends">/api/1/twitter/trends</a></dt>
           <dd>See most-talked-about #hashtag, links, and commonly used words from the last 12 hours.</dd>
+          <dt><a href="/api/1/twitter/ratelimit">/api/1/twitter/ratelimit</a></dt>
+          <dd>How many more Twitter API calls can the server make this hour?</dd>
         </dl>
         <dl>
-          <dt><a href="/api/timestamps">/api/timestamps</a></dt>
+          <dt><a href="/api/1/timestamps">/api/1/timestamps</a></dt>
           <dd>(for debug): Timestamps updated once per ten minutes in a regular cron job.</dd>
         </dl>
         <footer>
