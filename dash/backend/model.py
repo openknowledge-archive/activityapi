@@ -78,7 +78,12 @@ class Person(Base):
         return out
 
     def json(self):
-        out = { x:self.__getattribute__(x) for x in Person.buddypress_fields }
+        fields = [  'website', 'user_id', 
+                    'last_active', 'twitter', 'registered', 
+                    'permalink', 'location', 'display_name', 
+                    'login', 'email' ]
+        fields = ['login', 'permalink', 'avatar']
+        out = { x:self.__getattribute__(x) for x in fields }
         return out
 
 class PersonDiff(Base):
@@ -100,9 +105,5 @@ class PersonDiff(Base):
     def __repr__(self):
         return 'Persondiff [type=%s timestamp=%s login=%s json=%s]' % (self.type,self.timestamp,self.login,self.json)
 
-Person.buddypress_fields = [ 'website', 'about', 'user_id', 
-'last_active', 'twitter', 'registered', 
-'permalink', 'location', 'display_name', 
-'login', 'email', 'avatar', ]
 
 Base.metadata.create_all()

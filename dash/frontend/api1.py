@@ -2,20 +2,18 @@ from dash.frontend import app
 from dash.backend import Session
 from dash.backend.model import *
 import dash.util
-from flask import request
+from flask import request, make_response
 from datetime import datetime,timedelta
 import json
 
-@app.route('/api/1/')
 def index():
     rules = [x.rule for x in app.url_map.iter_rules()]
     endpoints = [request.url_root[:-1]+x for x in rules if x.startswith('/api/1')]
-    return json.dumps({'version':'0.1','ok':True,'endpoints':endpoints})
+    return {'version':'0.1','ok':True,'endpoints':endpoints}
 
-@app.route('/api/1/debug/request')
 def debug_request():
     """Dump the user's request back at them"""
-    data = {
+    return {
             'base_url' : request.base_url,
             'url_root' : request.url_root,
             'path' : request.path,
@@ -24,10 +22,8 @@ def debug_request():
             'args' : request.args,
             'view_args' : request.view_args,
     }
-    return json.dumps(data)
 
-@app.route('/api/1/twitter/tweets')
-def twitter():
+def twitter_tweets():
     limit = 50
     count = Session.query(Tweet).count()
     q = Session.query(Tweet).order_by(Tweet.tweet_id.desc()).limit(limit)
@@ -36,15 +32,13 @@ def twitter():
         'limit': limit, 
         'data': [ tweet.json() for tweet in q ] 
     }
-    return json.dumps(data)
+    return data
 
-@app.route('/api/1/twitter/ratelimit')
 def twitter_ratelimit():
     import dash.twitter
     api = dash.twitter.get_api()
-    return json.dumps( api.rate_limit_status() )
+    return  api.rate_limit_status() 
 
-@app.route('/api/1/twitter/trends')
 def twitter_trends():
     hours = 12
     since = datetime.now() - timedelta(hours=hours)
@@ -58,16 +52,23 @@ def twitter_trends():
         'urls' : dash.util.analyse(freq,links=True,results=5),
         'words' : dash.util.analyse(freq)
     }
-    return json.dumps( data )
+    return data 
 
-@app.route('/api/1/timestamps')
 def timestamps():
     limit = 10
     count = Session.query(Timestamp).count()
     q = Session.query(Timestamp).order_by(Timestamp.id.desc()).limit(limit)
-    data = { 
+    return { 
         'total': count, 
         'limit': limit, 
         'data': [ [x.id,x.now] for x in q ] 
     }
-    return json.dumps(data)
+
+def profile_list():
+    count = Session.query(Person).count()
+    q = Session.query(Person).order_by(Person.user_id.desc())
+    data = { 
+        'total': count, 
+        'data': [ person.json() for person in q ] 
+    }
+    return data
