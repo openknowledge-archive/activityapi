@@ -24,3 +24,9 @@ dd {
 .params td {
     border-top: none;
 }
+u {
+    /* Hijacked this tag */
+    font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+    font-size: 12px;
+    text-decoration: none;
+}

@@ -12,7 +12,8 @@
           <h1>OKFN Activity API</h1>
         </header>
         <br/>
-        <h4>Version 1 Endpoints&nbsp;&nbsp; <small style="float: right;">All endpoints are served in JSON format.</small></h4>
+        <h4>Version 1 Endpoints&nbsp;&nbsp; <small class="pull-right">All endpoints are served in JSON format.</small></h4>
+        <h4 class="clearfix"><small class="pull-right">An optional <u>?callback=</u> parameter triggers JSONP format.</small></h4>
         <dl>
           <dt><a href="/api/1/">/api/1/</a></dt>
           <dd>Check the health of the API.</dd>
@@ -24,16 +25,16 @@
           <table class="params table table-condensed">
               <thead><th colspan="2">Optional Parameters:</th></thead>
               <tbody>
-                  <tr><td><code>opinion</code></td><td>Filter by database's <code>_opinion</code> field.<br/><code>spammer</code>, <code>staff</code> etc...</td>
+                  <tr><td><code>opinion</code></td><td>Filter by database's <u>_opinion</u> field.<br/>"<u>spammer</u>", "<u>staff</u>" etc.</td>
               </tbody>
           </table></dd>
           <dt><a href="/api/1/person/list">/api/1/person/opinion</a></dt>
-          <dd><b>POST</b>-only. Set the <code>_opinion</code> field on a user.
+          <dd><b>POST</b>-only. Set the <u>_opinion</u> field on a user.
           <table class="params table table-condensed">
               <thead><th colspan="2">Required Parameters:</th></thead>
               <tbody>
-                  <tr><td><code>opinion</code></td><td>(String) Opinion value to write</td></tr>
-                  <tr><td><code>login</code></td><td>(String) User login to assign it to</td></tr>
+                  <tr><td><code>opinion</code></td><td>(String) Value of <u>_opinion</u> to write.</td></tr>
+                  <tr><td><code>login</code></td><td>(String) User's <u>login</u> to assign it to.</td></tr>
               </tbody>
           </table></dd>
         </dl>
