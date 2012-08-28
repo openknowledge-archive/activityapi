@@ -20,7 +20,18 @@ def debug_request():
             'method' : request.method,
             'headers' : {k:v for k,v in request.headers.iteritems()},
             'args' : request.args,
+            'form' : request.form,
             'view_args' : request.view_args,
+    }
+
+def debug_timestamps():
+    limit = 10
+    count = Session.query(Timestamp).count()
+    q = Session.query(Timestamp).order_by(Timestamp.id.desc()).limit(limit)
+    return { 
+        'total': count, 
+        'limit': limit, 
+        'data': [ [x.id,x.now] for x in q ] 
     }
 
 def twitter_tweets():
@@ -54,21 +65,27 @@ def twitter_trends():
     }
     return data 
 
-def timestamps():
-    limit = 10
-    count = Session.query(Timestamp).count()
-    q = Session.query(Timestamp).order_by(Timestamp.id.desc()).limit(limit)
-    return { 
-        'total': count, 
-        'limit': limit, 
-        'data': [ [x.id,x.now] for x in q ] 
-    }
-
-def profile_list():
+def person_list():
     count = Session.query(Person).count()
     q = Session.query(Person).order_by(Person.user_id.desc())
-    data = { 
+    opinion = request.args.get('opinion',None)
+    if opinion:
+        q = q.filter(Person._opinion==opinion)
+    return { 
         'total': count, 
         'data': [ person.json() for person in q ] 
     }
-    return data
+
+def person_opinion():
+    login = request.form.get('login')
+    opinion = request.form.get('opinion')
+    assert login 
+    assert opinion
+    q = Session.query(Person).filter(Person.login==login).update({Person._opinion:opinion})
+    Session.commit()
+    return {
+        'ok': q>0,
+        'login': login,
+        'opinion': opinion,
+        'updated':q
+    }
