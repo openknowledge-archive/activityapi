@@ -18,3 +18,9 @@ footer {
 footer p {
     margin-bottom: 4px;
 }
+dd {
+    margin-bottom: 8px;
+}
+.params td {
+    border-top: none;
+}

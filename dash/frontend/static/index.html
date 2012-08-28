@@ -17,6 +17,27 @@
           <dt><a href="/api/1/">/api/1/</a></dt>
           <dd>Check the health of the API.</dd>
         </dl>
+        <hr/>
+        <dl>
+          <dt><a href="/api/1/person/list">/api/1/person/list</a></dt>
+          <dd>List people from the <a href="http://okfn.org">okfn.org</a> BuddyPress database.
+          <table class="params table table-condensed">
+              <thead><th colspan="2">Optional Parameters:</th></thead>
+              <tbody>
+                  <tr><td><code>opinion</code></td><td>Filter by database's <code>_opinion</code> field.<br/><code>spammer</code>, <code>staff</code> etc...</td>
+              </tbody>
+          </table></dd>
+          <dt><a href="/api/1/person/list">/api/1/person/opinion</a></dt>
+          <dd><b>POST</b>-only. Set the <code>_opinion</code> field on a user.
+          <table class="params table table-condensed">
+              <thead><th colspan="2">Required Parameters:</th></thead>
+              <tbody>
+                  <tr><td><code>opinion</code></td><td>(String) Opinion value to write</td></tr>
+                  <tr><td><code>login</code></td><td>(String) User login to assign it to</td></tr>
+              </tbody>
+          </table></dd>
+        </dl>
+        <hr/>
         <dl>
           <dt><a href="/api/1/twitter/tweets">/api/1/twitter/tweets</a></dt>
           <dd>Twitter "firehose" of tweets from community members.</dd>
@@ -25,8 +46,11 @@
           <dt><a href="/api/1/twitter/ratelimit">/api/1/twitter/ratelimit</a></dt>
           <dd>How many more Twitter API calls can the server make this hour?</dd>
         </dl>
+        <hr/>
         <dl>
-          <dt><a href="/api/1/timestamps">/api/1/timestamps</a></dt>
+          <dt><a href="/api/1/debug/request">/api/1/debug/request</a></dt>
+          <dd>(for debug): Reflect the request you have GET/POST-ed to the server.</dd>
+          <dt><a href="/api/1/debug/timestamps">/api/1/debug/timestamps</a></dt>
           <dd>(for debug): Timestamps updated once per ten minutes in a regular cron job.</dd>
         </dl>
         <footer>
