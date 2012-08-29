@@ -104,5 +104,29 @@ class PersonDiff(Base):
     def __repr__(self):
         return 'Persondiff [type=%s timestamp=%s login=%s json=%s]' % (self.type,self.timestamp,self.login,self.json)
 
+class EventGithub(Base):
+    __tablename__='event_github'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    timestamp = Column(String)
+    type = Column(String)
+    repo = Column(String)
+    payload = Column(String)
+    def __init__(self, user_id, event):
+        self.id = int(event.id)
+        self.user_id = user_id
+        self.timestamp = event.created_at
+        self.type = event.type
+        self.repo = event.repo.name
+        self.payload = json.dumps(event.payload)
+    def json(self):
+        return {
+            'id' : self.id,
+            'user_id' : self.user_id,
+            'timestamp' : self.timestamp,
+            'type' : self.type,
+            'repo' : self.repo,
+            'payload' : self.payload,
+        }
 
 Base.metadata.create_all()

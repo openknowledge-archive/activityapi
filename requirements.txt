@@ -1,9 +1,9 @@
 Flask==0.9
 Jinja2==2.6
+PyGithub==1.4
 SQLAlchemy==0.7.2
 Werkzeug==0.8.3
 feedparser==5.1.2
 psycopg2==2.4.2
-pygithub3==0.4.1
 requests==0.13.5
 tweepy==1.10
