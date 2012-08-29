@@ -66,6 +66,7 @@ class Person(Base):
     display_name = Column(String)
     login = Column(String)
     email = Column(String)
+    github = Column(String)
     avatar = Column(String)
     _opinion = Column(String)
     _projects = Column(String)
