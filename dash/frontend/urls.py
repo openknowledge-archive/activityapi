@@ -36,4 +36,4 @@ app.add_url_rule('/api/1/twitter/ratelimit', 'api1.twitter_ratelimit', view_func
 app.add_url_rule('/api/1/twitter/trends', 'api1.twitter_trends', view_func=wrap(api1.twitter_trends))
 app.add_url_rule('/api/1/person/list', 'api1.person_list', view_func=wrap(api1.person_list))
 
-app.add_url_rule('/api/1/person/opinion', 'api1.person_opinion', view_func=wrap(api1.person_opinion), methods=["POST"])
+app.add_url_rule('/api/1/person/set_opinion', 'api1.person_set_opinion', view_func=wrap(api1.person_set_opinion), methods=["GET","POST"])

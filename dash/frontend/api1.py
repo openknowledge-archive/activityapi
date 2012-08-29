@@ -77,9 +77,9 @@ def person_list():
         'data': [ person.json() for person in q ] 
     }
 
-def person_opinion():
-    login = request.form.get('login')
-    opinion = request.form.get('opinion')
+def person_set_opinion():
+    login = request.values.get('login')
+    opinion = request.values.get('opinion')
     assert login 
     assert opinion
     q = Session.query(Person).filter(Person.login==login).update({Person._opinion:opinion})
