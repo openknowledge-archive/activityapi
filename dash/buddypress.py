@@ -49,7 +49,7 @@ def _clean(user):
 
 def _clean_website(website):
     """Clean up a website address from the Buddypress database"""
-    if website and not website[:4]=='http':
+    if website and not website.strip()[:4].lower()=='http':
         return 'http://'+website
     return website
 
