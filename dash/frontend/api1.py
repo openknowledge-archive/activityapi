@@ -69,7 +69,7 @@ def person_list():
     count = Session.query(Person).count()
     q = Session.query(Person).order_by(Person.user_id.desc())
     opinion = request.args.get('opinion',None)
-    if opinion:
+    if opinion is not None:
         q = q.filter(Person._opinion==opinion)
     return { 
         'total': count, 
