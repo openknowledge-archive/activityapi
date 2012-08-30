@@ -76,18 +76,36 @@ class MailingList(Base):
     name = Column(String)
     link = Column(String)
     description = Column(String)
-    def __init__(self, name, metadata):
-        self.update(name,metadata)
-    def update(self, name, metadata):
+    def __init__(self, name, link, description):
+        self.update(name,link,description)
+    def update(self, name, link, description):
         self.name = name
-        self.link = metadata['link']
-        self.description = metadata['description']
+        self.link = link
+        self.description = description
     def json(self):
         return {
                 'name': self.name,
                 'link': self.link,
                 'description': self.description,
                 }
+
+class SnapshotOfMailingList(Base):
+    __tablename__='snapshot_mailinglist'
+    mailinglist_id = Column(Integer, ForeignKey('mailinglist.id'), primary_key=True)
+    timestamp = Column(DateTime, primary_key=True) 
+    subscribers = Column(Integer)
+    posts_today = Column(Integer)
+    def __init__(self, timestamp, mailinglist_id, subscribers, posts_today):
+        self.mailinglist_id = mailinglist_id
+        self.timestamp = timestamp
+        self.subscribers = subscribers
+        self.posts_today = posts_today
+    def json(self):
+        return {
+            'timestamp': self.timestamp,
+            'subscribers': self.subscribers,
+            'posts_today': self.posts_today,
+        }
 
 
 class Tweet(Base):

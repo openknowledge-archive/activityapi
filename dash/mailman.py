@@ -2,20 +2,21 @@ from lxml import html
 import requests
 import os
 from dash.backend import Session
-from dash.backend.model import MailingList
+from dash.backend.model import MailingList, SnapshotOfMailingList
+from datetime import datetime
 
 
 ## TODO triage
-from datetime import datetime
 from urllib import urlretrieve
 from tempfile import mkstemp
 from mailbox import mbox
 import gzip
 
 
-def scrape_remote():
-    """Scrape the list server for a list of all mailing lists."""
+def scrape_mailinglists(verbose=False):
+    """Scrape the server for a catalogue of all mailing lists."""
     r = requests.get('http://lists.okfn.org')
+    if verbose: print 'Fetching %s' % r.url
     tree = html.fromstring( r.text )
     out = {}
     for row in tree.cssselect('tr'):
@@ -27,20 +28,36 @@ def scrape_remote():
             description = cells[1].text_content()
             if 'listinfo' in link:
                 out[name] = { 'link':link, 'description':description }
+    if verbose: print 'Got %d mailinglists' % len(out)
     return out
 
-def update_local( remote ):
+def save_mailinglists( mailinglists, verbose=False ):
     # Add and update
-    for k,v in remote.items():
-        obj = Session.query(MailingList).filter(MailingList.name==k).first()
-        if obj:
-            obj.update(k,v)
-        else:
-            Session.add( MailingList(k,v) )
+    for k,v in mailinglists.items():
+        v['list'] = Session.query(MailingList).filter(MailingList.name==k).first()
+        if v['list']: 
+            v['list'].update(k,v['link'],v['description'])
+        else:         
+            if verbose: print 'Adding new list %s' % k
+            v['list'] = MailingList(k,v['link'],v['description'])
+            Session.add( v['list'] )
     # Delete
     for ml in Session.query(MailingList):
-        if not ml.name in remote:
+        if not ml.name in mailinglists:
+            if verbose: print 'Deleting old list %s' % ml.name
             Session.delete(ml)
+    # Commit now to ensure list.id is auto-assigned
+    Session.commit()
+    # Snapshot
+    now = datetime.now()
+    for k,v in mailinglists.items():
+        if verbose: print 'Processing snapshot for %s...' % k
+        mailinglist_id = v['list'].id
+        subscribers = len(scrape_subscribers(k, mailinglists))
+        posts_today = 0
+        if verbose: print '  posts=%d subscribers=%d' % (posts_today,subscribers)
+        snapshot = SnapshotOfMailingList( now, mailinglist_id, subscribers, posts_today )
+        Session.add(snapshot)
     Session.commit()
 
 
