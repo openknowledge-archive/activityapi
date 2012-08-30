@@ -1,11 +1,66 @@
-import lxml 
+from lxml import html
+import requests
+import os
+from dash.backend import Session
+from dash.backend.model import MailingList
+
+
+## TODO triage
 from datetime import datetime
 from urllib import urlretrieve
 from tempfile import mkstemp
 from mailbox import mbox
 import gzip
 
-from common import make_activity
+
+def scrape_remote():
+    """Scrape the list server for a list of all mailing lists."""
+    r = requests.get('http://lists.okfn.org')
+    tree = html.fromstring( r.text )
+    out = {}
+    for row in tree.cssselect('tr'):
+        links = row.cssselect('a')
+        cells = row.cssselect('td')
+        if len(links)==1 and len(cells)==2:
+            name = links[0].text_content()
+            link = links[0].attrib['href']
+            description = cells[1].text_content()
+            if 'listinfo' in link:
+                out[name] = { 'link':link, 'description':description }
+    return out
+
+def update_local( remote ):
+    # Add and update
+    for k,v in remote.items():
+        obj = Session.query(MailingList).filter(MailingList.name==k).first()
+        if obj:
+            obj.update(k,v)
+        else:
+            Session.add( MailingList(k,v) )
+    # Delete
+    for ml in Session.query(MailingList):
+        if not ml.name in remote:
+            Session.delete(ml)
+    Session.commit()
+
+
+def scrape_subscribers(list_name, all_lists, verbose=False):
+    """Access the list's roster and generate 
+       a text->href list of members of this list."""
+    url = all_lists[list_name]['link'].replace('listinfo','roster')
+    # admin@okfn.org can access list rosters
+    payload={'roster-email':'admin@okfn.org', 'roster-pw':os.environ.get('MAILMAN_ADMIN_PW')}
+    if verbose: print 'Scraping subscriber list for %s...' % list_name
+    r = requests.post(url, data=payload)
+    # Did we get in?
+    if 'roster authentication failed' in r.text:
+        raise ValueError('Roster authentication failed. Bad password.')
+    # Scrape all the links to email--at--domain.com
+    tree = html.fromstring( r.text )
+    _links = tree.cssselect('a')
+    links = filter( lambda x: '--at--' in x.attrib['href'], _links )
+    return { x.text_content : x.attrib['href'] for x in links }
+    
 
 def _dictize(message):
     subjects = message.get_all('Subject')
@@ -60,7 +115,6 @@ def get_messages(url, how_many_months=1):
                 mboxfh.close()
                 gzfh.close()
                 _mbox = mbox(mboxtmp)
-                for message in _mbox:
-                    yield message
+                return list(_mbox)
         except IOError, io:
             log.exception(io)

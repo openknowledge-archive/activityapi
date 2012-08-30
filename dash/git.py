@@ -1,6 +1,28 @@
 from github import Github
 from dash.backend import Session
-from dash.backend.model import Person, EventGithub
+from dash.backend.model import Repo, Person, EventGithub
+
+def scrape_repos():
+    gh = Github()
+    okfn = gh.get_organization('okfn')
+    # Slow, paginated server call:
+    return { x.full_name : x for x in okfn.get_repos() }
+
+def save_repos( gh_repos ):
+    # Add and update
+    for k,v in gh_repos.items():
+        repo = Session.query(Repo).filter(Repo.full_name==k).first()
+        if repo:
+            repo.update(v)
+        else:
+            Session.add( Repo(v) )
+    # Delete
+    for repo in Session.query(Repo):
+        if not repo.full_name in gh_repos:
+            Session.delete(repo)
+    Session.commit()
+
+
 
 def scrape_github(verbose=False):
     q = Session.query(Person).filter(Person.github!=None)

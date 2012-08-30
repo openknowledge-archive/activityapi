@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column,Integer,String,DateTime,BigInteger,Float,ForeignKey
+from sqlalchemy import Column,Integer,String,DateTime,BigInteger,Float,ForeignKey,Boolean
 from . import engine
 import json
 
@@ -13,6 +13,58 @@ class Timestamp(Base):
         self.now = now
     def __repr__(self):
         return "<Ts('%s')>" % (self.now)
+
+class Repo(Base):
+    __tablename__='repo'
+    id = Column(Integer, primary_key=True)
+    created_at = Column(DateTime) 
+    description = Column(String) 
+    fork = Column(Boolean) 
+    full_name = Column(String) 
+    homepage = Column(String) 
+    html_url = Column(String)
+    language = Column(String)
+    def __init__(self, repo):
+        self.update(repo)
+    def update(self, repo):
+        self.created_at = repo.created_at
+        self.description = repo.description
+        self.fork = repo.fork
+        self.full_name = repo.full_name
+        self.homepage = repo.homepage
+        self.html_url = repo.html_url
+        self.language = repo.language
+    def json(self):
+        return {
+            'created_at' : self.created_at ,
+            'description' : self.description ,
+            'fork' : self.fork ,
+            'full_name' : self.full_name ,
+            'homepage' : self.homepage ,
+            'html_url' : self.html_url ,
+            'language' : self.language ,
+        }
+
+
+class MailingList(Base):
+    __tablename__='mailinglist'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    link = Column(String)
+    description = Column(String)
+    def __init__(self, name, metadata):
+        self.update(name,metadata)
+    def update(self, name, metadata):
+        self.name = name
+        self.link = metadata['link']
+        self.description = metadata['description']
+    def json(self):
+        return {
+                'name': self.name,
+                'link': self.link,
+                'description': self.description,
+                }
+
 
 class Tweet(Base):
     __tablename__='activity_twitter'
