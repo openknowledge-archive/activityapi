@@ -30,7 +30,8 @@ def save_repos( gh_repos ):
     now = datetime.now()
     for k,v in gh_repos.items():
         repo_id = v['repo'].id
-        snapshot = SnapshotOfRepo( now, repo_id, v['gh_repo'] )
+        x = v['gh_repo']
+        snapshot = SnapshotOfRepo( now, repo_id, x.open_issues, x.size, x.watchers, x.forks )
         Session.add(snapshot)
     Session.commit()
 

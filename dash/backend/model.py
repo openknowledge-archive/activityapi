@@ -53,13 +53,13 @@ class SnapshotOfRepo(Base):
     size = Column(Integer)
     watchers = Column(Integer)
     forks = Column(Integer)
-    def __init__(self, timestamp, repo_id, gh_repo):
+    def __init__(self, timestamp, repo_id, open_issues, size, watchers, forks):
         self.repo_id = repo_id
         self.timestamp = timestamp
-        self.open_issues = gh_repo.open_issues
-        self.size = gh_repo.size
-        self.watchers = gh_repo.watchers
-        self.forks = gh_repo.forks
+        self.open_issues = open_issues
+        self.size = size
+        self.watchers = watchers
+        self.forks = forks
     def json(self):
         return {
             'timestamp': self.timestamp,
