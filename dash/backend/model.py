@@ -45,6 +45,30 @@ class Repo(Base):
             'language' : self.language ,
         }
 
+class SnapshotOfRepo(Base):
+    __tablename__='snapshot_repo'
+    repo_id = Column(Integer, ForeignKey('repo.id'), primary_key=True)
+    timestamp = Column(DateTime, primary_key=True) 
+    open_issues = Column(Integer)
+    size = Column(Integer)
+    watchers = Column(Integer)
+    forks = Column(Integer)
+    def __init__(self, timestamp, repo_id, gh_repo):
+        self.repo_id = repo_id
+        self.timestamp = timestamp
+        self.open_issues = gh_repo.open_issues
+        self.size = gh_repo.size
+        self.watchers = gh_repo.watchers
+        self.forks = gh_repo.forks
+    def json(self):
+        return {
+            'timestamp': self.timestamp,
+            'open_issues': self.open_issues,
+            'size': self.size,
+            'watchers': self.watchers,
+            'forks': self.forks ,
+        }
+
 
 class MailingList(Base):
     __tablename__='mailinglist'

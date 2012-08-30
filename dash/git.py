@@ -1,28 +1,41 @@
 from github import Github
 from dash.backend import Session
-from dash.backend.model import Repo, Person, EventGithub
+from dash.backend.model import Repo, SnapshotOfRepo, Person, EventGithub
+from datetime import datetime
 
 def scrape_repos():
     gh = Github()
     okfn = gh.get_organization('okfn')
     # Slow, paginated server call:
-    return { x.full_name : x for x in okfn.get_repos() }
+    return { x.full_name : {'gh_repo':x} for x in okfn.get_repos() }
 
 def save_repos( gh_repos ):
+    """Update the 'repo' table"""
     # Add and update
     for k,v in gh_repos.items():
-        repo = Session.query(Repo).filter(Repo.full_name==k).first()
-        if repo:
-            repo.update(v)
+        # v is a dict of a 'repo' (from our ORM) and a 'gh_repo' (from the library)
+        v['repo'] = Session.query(Repo).filter(Repo.full_name==k).first()
+        if v['repo']:
+            v['repo'].update(v['gh_repo'])
         else:
-            Session.add( Repo(v) )
+            v['repo'] = Repo(v['gh_repo'])
+            Session.add( v['repo'] )
     # Delete
     for repo in Session.query(Repo):
         if not repo.full_name in gh_repos:
             Session.delete(repo)
+    # Commit now to ensure repo.id is auto-assigned
+    Session.commit()
+    # Snapshot
+    now = datetime.now()
+    for k,v in gh_repos.items():
+        repo_id = v['repo'].id
+        snapshot = SnapshotOfRepo( now, repo_id, v['gh_repo'] )
+        Session.add(snapshot)
     Session.commit()
 
 
+# Activity scrapers
 
 def scrape_github(verbose=False):
     q = Session.query(Person).filter(Person.github!=None)
@@ -48,9 +61,4 @@ def _scrape_user_events( user_id, gh_user, verbose=False ):
         if verbose: print '  > type=%s  id=%s' % (x.type,x.id)
         Session.add( EventGithub(user_id, x) )
         max -= 1
-
-
-
-
-
 
