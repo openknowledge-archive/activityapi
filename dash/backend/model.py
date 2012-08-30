@@ -6,7 +6,7 @@ import json
 Base = declarative_base(bind=engine)
 
 class Timestamp(Base):
-    __tablename__='timestamps'
+    __tablename__='timestamp'
     id = Column(Integer, primary_key=True)
     now = Column(String)
     def __init__(self, now):
@@ -15,7 +15,7 @@ class Timestamp(Base):
         return "<Ts('%s')>" % (self.now)
 
 class Tweet(Base):
-    __tablename__='tweets'
+    __tablename__='activity_twitter'
     id = Column(Integer, primary_key=True)
     tweet_id = Column(BigInteger)
     timestamp = Column(DateTime)
@@ -53,7 +53,7 @@ class Tweet(Base):
         }
 
 class Person(Base):
-    __tablename__='people'
+    __tablename__='person'
     id = Column(Integer, primary_key=True)
     website = Column(String)
     about = Column(String)
@@ -86,7 +86,7 @@ class Person(Base):
         return out
 
 class PersonDiff(Base):
-    __tablename__='person_diff'
+    __tablename__='activity_buddypress'
     id = Column(Integer, primary_key=True)
     login = Column(String)
     type = Column(String)
@@ -105,7 +105,7 @@ class PersonDiff(Base):
         return 'Persondiff [type=%s timestamp=%s login=%s json=%s]' % (self.type,self.timestamp,self.login,self.json)
 
 class EventGithub(Base):
-    __tablename__='event_github'
+    __tablename__='activity_github'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer)
     timestamp = Column(String)
