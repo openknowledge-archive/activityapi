@@ -4,7 +4,7 @@ import string
 import re
 
 
-def scrape_remote( url , payload=None, verbose=False):
+def scrape_users( url , payload=None, verbose=False):
     obj = util.download_json(url,payload)
     users = obj['users']
     if verbose:
@@ -12,7 +12,7 @@ def scrape_remote( url , payload=None, verbose=False):
     map(_clean,users)
     return { x['user_id']:x for x in users }
 
-def update_local( usermap, verbose=False ):
+def save_users( usermap, verbose=False ):
     addme = set(usermap.keys())
     for existing in Session.query(model.Person):
         user_id = existing.user_id
@@ -20,7 +20,7 @@ def update_local( usermap, verbose=False ):
             _diff(existing, usermap[user_id], verbose)
             addme.remove( user_id )
         else:
-            diff = model.PersonDiff('delete',existing)
+            diff = model.ActivityInBuddypress('delete',existing)
             Session.add(diff)
             if verbose:
                 print diff
@@ -29,7 +29,7 @@ def update_local( usermap, verbose=False ):
         user = usermap[x]
         person = model.Person.parse(user)
         Session.add(person)
-        diff = model.PersonDiff('add',person)
+        diff = model.ActivityInBuddypress('add',person)
         Session.add(diff)
         if verbose:
             print diff
@@ -81,13 +81,13 @@ def _diff(person, data, verbose=False):
     for (k,v) in data.items():
         old = person.__getattribute__(k)
         if not old==v:
-            # I like to track changes people make to their profiles
-            diff = model.PersonDiff('update',person, {'attribute':k,'old_value':old,'new_value':v})
-            if not k[0]=='_':
-                # Don't store a diff if I update stupid fields like '_twitter' 
+            # Don't store a diff if I update stupid fields like '_twitter' 
+            if not (k[0]=='_' or k=='last_active'):
+                # I like to track changes people make to their profiles
+                diff = model.ActivityInBuddypress('update',person, {'attribute':k,'old_value':old,'new_value':v})
                 Session.add(diff)
-            if verbose:
-                print diff
+                if verbose:
+                    print diff
             changed = True
             person.__setattr__(k,v)
     if changed:

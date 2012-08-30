@@ -179,7 +179,7 @@ class Person(Base):
         out = { x:self.__getattribute__(x) for x in fields }
         return out
 
-class PersonDiff(Base):
+class ActivityInBuddypress(Base):
     __tablename__='activity_buddypress'
     id = Column(Integer, primary_key=True)
     login = Column(String)
@@ -196,7 +196,13 @@ class PersonDiff(Base):
         metadata['display_name'] = person.display_name
         self.json = json.dumps(metadata)
     def __repr__(self):
-        return 'Persondiff [type=%s timestamp=%s login=%s json=%s]' % (self.type,self.timestamp,self.login,self.json)
+        if self.type=='add':
+            return 'Added new user %s' % self.login
+        if self.type=='delete':
+            return 'Deleted user %s' % self.login
+        if self.type=='update':
+            return 'User %s updated profile (json=%s)' % (self.login, self.json[:50])
+        return 'ActivityInBuddypress (type=%s login=%s)' % (self.type,self.login)
 
 class EventGithub(Base):
     __tablename__='activity_github'
