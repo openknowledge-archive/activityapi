@@ -34,8 +34,10 @@ def createsnapshots(mailinglist):
     Session.commit()
 
 
-def imp(x):
-    return SnapshotOfMailingList( datetime.fromtimestamp(x['timestamp']).date(), x['mailinglist_id'], x['subscribers'], x['posts_today'] )
+def decode_snapshot(x):
+    return SnapshotOfMailingList( decode_date(x['timestamp']), x['mailinglist_id'], x['subscribers'], x['posts_today'] )
+def encode_snapshot(x):
+    return {'timestamp':encode_date(x.timestamp), 'mailinglist_id':x.mailinglist_id, 'subscribers':x.subscribers, 'posts_today':x.posts_today}
 
 def go(data,interval):
     while len(data):
@@ -45,4 +47,8 @@ def go(data,interval):
         data = data[interval:]
         print len(data),'remaining'
 
+def encode_date(d):
+    return d.isoformat()
 
+def decode_date(d):
+    return datetime.strptime(d, '%Y-%m-%d').date()
