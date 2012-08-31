@@ -13,7 +13,7 @@ def main():
         mailman.save_mailinglists( lists, verbose=arg.verbose )
         mailman.snapshot_mailinglists(verbose=arg.verbose)
     elif arg.mode=='activity':
-        pass
+        mailman.scrape_activity( verbose=arg.verbose )
 
 if __name__=='__main__':
     main()

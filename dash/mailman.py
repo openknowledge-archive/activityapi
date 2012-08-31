@@ -2,7 +2,7 @@ from lxml import html
 import requests
 import os
 from dash.backend import Session
-from dash.backend.model import MailingList, SnapshotOfMailingList
+from dash.backend.model import MailingList, SnapshotOfMailingList, ActivityInMailingList
 from datetime import datetime,timedelta
 from StringIO import StringIO
 from gzip import GzipFile
@@ -47,6 +47,72 @@ def save_mailinglists( mailinglists, verbose=False ):
             if verbose: print 'Deleting old list %s' % ml.name
             Session.delete(ml)
     Session.commit()
+
+
+###  Get mailinglist activity
+
+def scrape_activity(verbose=False):
+    for l in Session.query(MailingList):
+        if verbose: print 'Processing activity for %s...' % l.name
+        latest = Session.query(ActivityInMailingList)\
+                .filter(ActivityInMailingList.mailinglist_id==l.id)\
+                .order_by(ActivityInMailingList.message_id.desc())\
+                .first()
+
+        # Walk through message history from the web front-end
+        archive_url = l.link.replace('mailman/listinfo','pipermail')
+        limit = 100
+        latest_id = latest.message_id if latest else 0
+        for msg in _iterate_messages_individual(archive_url,latest_id, verbose=verbose):
+            if verbose: print '  -> got msg #%d (%s: "%s")' % (msg['id'],msg['email'],msg['subject'])
+
+            Session.add( ActivityInMailingList(
+                l.id, 
+                msg['id'], 
+                msg['subject'],
+                msg['author'],
+                msg['email'],
+                msg['link'],
+                msg['date'],
+                    ) )
+            limit -= 1
+            if limit==0: 
+                if verbose: print '  -> Reached activity limit (100)'
+                break;
+        Session.commit()
+
+def _iterate_messages_individual(url, latest_id, verbose=False):
+    if verbose: print 'Fetching list index %s...' % url
+    r = requests.get(url)
+    tree = html.fromstring(r.text)
+    links = tree.cssselect('a:nth-child(4)')
+    for link in links:
+        month_url = url+'/'+link.attrib['href']
+        base_url = month_url.replace('date.html','')
+        r = requests.get(month_url)
+        tree = html.fromstring(r.text)
+        ul = tree.cssselect('ul')[1]
+        lis = ul.cssselect('li') 
+        # Why does mailman serve me ascending chronological order?
+        lis.reverse()
+        for li in lis:
+            a = li.cssselect('a')
+            out = {
+                'author' : li.cssselect('i')[0].text_content().strip(),
+                'link' : base_url + a[0].attrib['href'],
+                'subject' : a[0].text_content().strip(),
+                'id' : int( a[1].attrib['name'] )
+            }
+            if latest_id and out['id']==latest_id:
+                if verbose: print '  -> No further messages'
+                return
+            # Download further message details (date & author) from the message's page
+            r = requests.get(out['link'])
+            msg_tree = html.fromstring(r.text)
+            tmp_date = msg_tree.cssselect('i')[0].text_content() 
+            out['date'] = datetime.strptime(tmp_date,'%a %b %d %H:%M:%S %Z %Y')
+            out['email'] = msg_tree.cssselect('a')[0].text_content().strip().replace(' at ','@')
+            yield out
 
 
 ###  Snapshot all mailinglists ( # subscribers, # posts per day )

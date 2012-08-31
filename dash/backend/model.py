@@ -204,6 +204,34 @@ class ActivityInBuddypress(Base):
             return 'User %s updated profile (json=%s)' % (self.login, self.json[:50])
         return 'ActivityInBuddypress (type=%s login=%s)' % (self.type,self.login)
 
+class ActivityInMailingList(Base):
+    __tablename__='activity_mailman'
+    mailinglist_id  = Column(Integer, primary_key=True)
+    message_id = Column(Integer, primary_key=True)
+    subject = Column(String)
+    author = Column(String)
+    email = Column(String)
+    link = Column(String)
+    timestamp = Column(DateTime)
+    def __init__(self, mailinglist_id, message_id, subject, author, email, link, timestamp):
+        self.mailinglist_id = mailinglist_id
+        self.message_id = message_id
+        self.subject = subject
+        self.author = author
+        self.email = email
+        self.link = link
+        self.timestamp = timestamp
+    def json(self):
+        return {
+            'mailinglist_id'  : self.mailinglist_id,
+            'message_id' : self.message_id,
+            'subject' : self.subject,
+            'author' : self.author,
+            'email' : self.email,
+            'link' : self.link,
+            'timestamp' : self.timestamp,
+        }
+
 class EventGithub(Base):
     __tablename__='activity_github'
     id = Column(Integer, primary_key=True)
