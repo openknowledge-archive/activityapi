@@ -3,12 +3,15 @@ import requests
 import os
 from dash.backend import Session
 from dash.backend.model import MailingList, SnapshotOfMailingList
-from datetime import datetime
+from datetime import datetime,timedelta
 from StringIO import StringIO
 from gzip import GzipFile
 from tempfile import mkstemp
 from mailbox import mbox
 import re
+
+
+###  Maintain a database of mailing lists
 
 def scrape_mailinglists(verbose=False):
     """Scrape the server for a catalogue of all mailing lists."""
@@ -31,34 +34,68 @@ def scrape_mailinglists(verbose=False):
 def save_mailinglists( mailinglists, verbose=False ):
     # Add and update
     for k,v in mailinglists.items():
-        v['list'] = Session.query(MailingList).filter(MailingList.name==k).first()
-        if v['list']: 
-            v['list'].update(k,v['link'],v['description'])
+        l = Session.query(MailingList).filter(MailingList.name==k).first()
+        if l:
+            l.update(k,v['link'],v['description'])
         else:         
             if verbose: print 'Adding new list %s' % k
-            v['list'] = MailingList(k,v['link'],v['description'])
-            Session.add( v['list'] )
+            l = MailingList(k,v['link'],v['description'])
+            Session.add( l )
     # Delete
     for ml in Session.query(MailingList):
         if not ml.name in mailinglists:
             if verbose: print 'Deleting old list %s' % ml.name
             Session.delete(ml)
-    # Commit now to ensure list.id is auto-assigned
-    Session.commit()
-    # Snapshot
-    now = datetime.now()
-    for k,v in mailinglists.items():
-        if verbose: print 'Processing snapshot for %s...' % k
-        mailinglist_id = v['list'].id
-        roster_url = mailinglists[k]['link'].replace('listinfo','roster')
-        subscribers = len(scrape_subscribers(roster_url,verbose))
-        posts_today = 0
-        if verbose: print '  posts=%d subscribers=%d' % (posts_today,subscribers)
-        snapshot = SnapshotOfMailingList( now, mailinglist_id, subscribers, posts_today )
-        Session.add(snapshot)
     Session.commit()
 
-def scrape_subscribers(url, verbose=False):
+
+###  Snapshot all mailinglists ( # subscribers, # posts per day )
+
+def snapshot_mailinglists(verbose=False):
+    day = timedelta(days=1)
+    today = datetime.now().date()
+    until = today - day
+    for l in Session.query(MailingList):
+        if verbose: print 'Processing snapshots for %s...' % l.name
+        latest = Session.query(SnapshotOfMailingList)\
+                .filter(SnapshotOfMailingList.mailinglist_id==l.id)\
+                .order_by(SnapshotOfMailingList.timestamp.desc())\
+                .first()
+        # By default, gather 30 days of snapshots
+        since = until - timedelta(days=30)
+        if latest:
+            if latest.timestamp>=until:
+                if verbose: print ' -> most recent snapshots have already been processed.'
+                continue
+            since = latest.timestamp + day
+        # Download subscriber list
+        roster_url = l.link.replace('listinfo','roster')
+        num_subscribers = len(_scrape_subscribers(roster_url, verbose=verbose))
+        # Walk through message history, counting messages per day
+        post_tally = { x:0 for x in _daterange(since,until) }
+        archive_url = l.link.replace('mailman/listinfo','pipermail')
+        for message in _iterate_message_archives(archive_url,verbose):
+            d = message['date'].date()
+            if d < since:
+                break
+            if d <= until:
+                post_tally[ d ] += 1
+        # Write snapshots to the database
+        for (date,posts_today) in post_tally.items():
+            o = SnapshotOfMailingList( date, l.id, num_subscribers, posts_today )
+            Session.add(o)
+            if verbose: print '  -> ',o.json()
+        if verbose: print '  -> Done. Got %d snapshots' % len(post_tally)
+        Session.commit()
+
+def _daterange(since,until):
+    out = []
+    while since<=until:
+        out.append(since)
+        since+=timedelta(days=1)
+    return out
+
+def _scrape_subscribers(url, verbose=False):
     """Access the list's roster and generate 
        a text->href list of members of this list."""
     # admin@okfn.org can access list rosters
@@ -74,29 +111,19 @@ def scrape_subscribers(url, verbose=False):
     links = filter( lambda x: '--at--' in x.attrib['href'], _links )
     return { x.text_content : x.attrib['href'] for x in links }
     
-def iterate_messages(url, verbose=False, since_datetime=None, max_months=0):
+def _iterate_message_archives(url, verbose=False):
     if verbose: print 'Fetching list index %s...' % url
     r = requests.get(url)
     tree = html.fromstring(r.text)
-    _date_links = tree.cssselect('a')
-    date_links = [ url+'/'+x.attrib['href'] for x in _date_links if x.attrib['href'].endswith('.gz') ]
-    count=0
-    for url in date_links:
-        if max_months and count==max_months:
-            if verbose: print '  -> Returned max (%d) months' % max_months
-            return
+    _gzip_links = tree.cssselect('a')
+    gzip_links = [ url+'/'+x.attrib['href'] for x in _gzip_links if x.attrib['href'].endswith('.gz') ]
+    for url in gzip_links:
         if verbose: print '  -> %s' % url
-        source_url = url.replace('.txt.gz','/')
-        mailbox = _url_to_mailbox(url,verbose)
+        mailbox = _scrape_gzip_archive(url)
         for message in mailbox:
-            if since_datetime and message['date']<=since_datetime:
-                if verbose: print '  -> Reached since_datetime.' 
-                return
-            message['source_url'] = source_url
             yield message
-        count += 1
 
-def _url_to_mailbox(url,verbose=False):
+def _scrape_gzip_archive(url):
     r = requests.get(url)
     buf = StringIO(r.content)
     content = GzipFile(fileobj=buf, mode='rb').read()
@@ -105,17 +132,14 @@ def _url_to_mailbox(url,verbose=False):
     f = open(tmp,'w')
     f.write(content)
     f.close()
-    out = []
-    for message in mbox(tmp):
-        d = _dictize_message(message)
-        if d['date']:
-            out.append(d)
-        else:
-            if verbose: print 'Skipping message with no date (author=%s subject=%s)' % (message['author'],message['title'])
+    # Iterate through the archive, ignoring those with no valid date attached
+    out = [ _dictize_message(x) for x in mbox(tmp) if x['date'] ]
     # Descending chronological order
     return sorted(out, key=lambda x:x['date'], reverse=True)
 
 def _dictize_message(message):
+    """Utility method. Not all these fields are 
+       really used, but this is how it's done."""
     subjects = message.get_all('Subject')
     subject = subjects[-1] if subjects else '(No Subject)'
     
