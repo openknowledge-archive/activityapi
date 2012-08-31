@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column,Integer,String,DateTime,BigInteger,Float,ForeignKey,Boolean
+from sqlalchemy import Column,Integer,String,DateTime,Date,BigInteger,Float,ForeignKey,Boolean
 from . import engine
 import json
 
@@ -48,7 +48,7 @@ class Repo(Base):
 class SnapshotOfRepo(Base):
     __tablename__='snapshot_repo'
     repo_id = Column(Integer, ForeignKey('repo.id'), primary_key=True)
-    timestamp = Column(DateTime, primary_key=True) 
+    timestamp = Column(Date, primary_key=True) 
     open_issues = Column(Integer)
     size = Column(Integer)
     watchers = Column(Integer)
@@ -92,7 +92,7 @@ class MailingList(Base):
 class SnapshotOfMailingList(Base):
     __tablename__='snapshot_mailinglist'
     mailinglist_id = Column(Integer, ForeignKey('mailinglist.id'), primary_key=True)
-    timestamp = Column(DateTime, primary_key=True) 
+    timestamp = Column(Date, primary_key=True) 
     subscribers = Column(Integer)
     posts_today = Column(Integer)
     def __init__(self, timestamp, mailinglist_id, subscribers, posts_today):

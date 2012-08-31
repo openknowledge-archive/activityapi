@@ -50,20 +50,20 @@ def save_mailinglists( mailinglists, verbose=False ):
     for k,v in mailinglists.items():
         if verbose: print 'Processing snapshot for %s...' % k
         mailinglist_id = v['list'].id
-        subscribers = len(scrape_subscribers(k, mailinglists))
+        roster_url = mailinglists[k]['link'].replace('listinfo','roster')
+        subscribers = len(scrape_subscribers(roster_url,verbose))
         posts_today = 0
         if verbose: print '  posts=%d subscribers=%d' % (posts_today,subscribers)
         snapshot = SnapshotOfMailingList( now, mailinglist_id, subscribers, posts_today )
         Session.add(snapshot)
     Session.commit()
 
-def scrape_subscribers(list_name, all_lists, verbose=False):
+def scrape_subscribers(url, verbose=False):
     """Access the list's roster and generate 
        a text->href list of members of this list."""
-    url = all_lists[list_name]['link'].replace('listinfo','roster')
     # admin@okfn.org can access list rosters
     payload={'roster-email':'admin@okfn.org', 'roster-pw':os.environ.get('MAILMAN_ADMIN_PW')}
-    if verbose: print 'Scraping subscriber list for %s...' % list_name
+    if verbose: print 'Scraping subscriber list for %s...' % url
     r = requests.post(url, data=payload)
     # Did we get in?
     if 'roster authentication failed' in r.text:
@@ -74,7 +74,7 @@ def scrape_subscribers(list_name, all_lists, verbose=False):
     links = filter( lambda x: '--at--' in x.attrib['href'], _links )
     return { x.text_content : x.attrib['href'] for x in links }
     
-def iterate_messages(url, verbose=False, since_date=None, max_months=0):
+def iterate_messages(url, verbose=False, since_datetime=None, max_months=0):
     if verbose: print 'Fetching list index %s...' % url
     r = requests.get(url)
     tree = html.fromstring(r.text)
@@ -89,8 +89,8 @@ def iterate_messages(url, verbose=False, since_date=None, max_months=0):
         source_url = url.replace('.txt.gz','/')
         mailbox = _url_to_mailbox(url,verbose)
         for message in mailbox:
-            if since_date and message['date']<=since_date:
-                if verbose: print '  -> Reached since_date.' 
+            if since_datetime and message['date']<=since_datetime:
+                if verbose: print '  -> Reached since_datetime.' 
                 return
             message['source_url'] = source_url
             yield message
@@ -122,12 +122,12 @@ def _dictize_message(message):
     dates = message.get_all('Date')
     date = None
     if dates:
-        date = dates[-1].rsplit(' +', 1)[0].rsplit(' -', 1)[0].strip()
+        tmp = dates[-1].rsplit(' +', 1)[0].rsplit(' -', 1)[0].strip()
         try:
-            date = datetime.strptime(date, '%a, %d %b %Y %H:%M:%S')
+            date = datetime.strptime(tmp, '%a, %d %b %Y %H:%M:%S')
         except ValueError:
             try:
-                date = datetime.strptime(date, '%a, %d %b %Y %H:%M')
+                date = datetime.strptime(tmp, '%a, %d %b %Y %H:%M')
             except ValueError:
                 pass
     # Extract an email address
