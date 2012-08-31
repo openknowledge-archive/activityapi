@@ -9,3 +9,4 @@ lxml==3.0alpha2
 psycopg2==2.4.2
 requests==0.13.5
 tweepy==1.10
+newrelic
