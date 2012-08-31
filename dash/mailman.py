@@ -4,14 +4,10 @@ import os
 from dash.backend import Session
 from dash.backend.model import MailingList, SnapshotOfMailingList
 from datetime import datetime
-
-
-## TODO triage
-from urllib import urlretrieve
+from StringIO import StringIO
+from gzip import GzipFile
 from tempfile import mkstemp
 from mailbox import mbox
-import gzip
-
 
 def scrape_mailinglists(verbose=False):
     """Scrape the server for a catalogue of all mailing lists."""
@@ -60,7 +56,6 @@ def save_mailinglists( mailinglists, verbose=False ):
         Session.add(snapshot)
     Session.commit()
 
-
 def scrape_subscribers(list_name, all_lists, verbose=False):
     """Access the list's roster and generate 
        a text->href list of members of this list."""
@@ -78,8 +73,42 @@ def scrape_subscribers(list_name, all_lists, verbose=False):
     links = filter( lambda x: '--at--' in x.attrib['href'], _links )
     return { x.text_content : x.attrib['href'] for x in links }
     
+def iterate_messages(url, verbose=False, since_date=None, max_months=0):
+    if verbose: print 'Fetching list index %s...' % url
+    r = requests.get(url)
+    tree = html.fromstring(r.text)
+    _date_links = tree.cssselect('a')
+    date_links = [ url+x.attrib['href'] for x in _date_links if x.attrib['href'].endswith('.gz') ]
+    count=0
+    for url in date_links:
+        if max_months and count==max_months:
+            if verbose: print '  -> Returned max (%d) months' % max_months
+            return
+        if verbose: print '  -> %s' % url
+        source_url = url.replace('.txt.gz','/')
+        mailbox = _url_to_mailbox(url)
+        for message in mailbox:
+            if since_date and message['date']<=since_date:
+                if verbose: print '  -> Reached since_date.' 
+                return
+            message['source_url'] = source_url
+            yield message
+        count += 1
 
-def _dictize(message):
+def _url_to_mailbox(url):
+    r = requests.get(url)
+    buf = StringIO(r.content)
+    content = GzipFile(fileobj=buf, mode='rb').read()
+    # mbox requires we dump this to a temp file
+    tmp = mkstemp()[1]
+    f = open(tmp,'w')
+    f.write(content)
+    f.close()
+    out = [ _dictize_message(x) for x in mbox(tmp) ]
+    # Descending chronological order
+    return sorted(out, key=lambda x:x['date'], reverse=True)
+
+def _dictize_message(message):
     subjects = message.get_all('Subject')
     subject = subjects[-1] if subjects else '(No Subject)'
     
@@ -87,51 +116,10 @@ def _dictize(message):
     date = dates[-1] if dates else '(No date)'
     date = date.rsplit(' +', 1)[0].rsplit(' -', 1)[0].strip()
     date = datetime.strptime(date, '%a, %d %b %Y %H:%M:%S')
-    # do not save description here as large
-    # description =  message.get_payload()
-    description = None
     return {
         'author': message.get_from().split('  ')[0],
         'title': subject,
-        'description': description,
-        'source_url': url,
-        'date' : date
+        'date' : date,
         }
 
-def gather(url, how_many_months=1):
-    '''Gather mailman archives info.
 
-    :param how_many_months: how many months back to go in the archives. Set to
-        <= 0 for unlimited.
-    '''
-    print 'gathering %s' % url
-    if 'mailman/listinfo' in url:
-        url = url.replace('mailman/listinfo', 'pipermail')
-    return [ _dictize(message) for message in get_messages(url, how_many_months) ]
-
-def get_messages(url, how_many_months=1):
-    try:
-        index = lxml.html.parse(url)
-    except IOError, io:
-        return []
-    count = 0
-    for anchor in index.findall('//a'):
-        if how_many_months > 0 and count >= how_many_months:
-            break
-        try:
-            ref = anchor.get('href')
-            if ref.endswith('.gz'):
-                count += 1
-                log.info('Archive: %s' % ref.split('.')[0])
-                ref = url + '/' + ref
-                filename, headers = urlretrieve(ref)
-                gzfh = gzip.open(filename, 'r')
-                fh, mboxtmp = mkstemp()
-                mboxfh = open(mboxtmp, 'w')
-                mboxfh.write(gzfh.read())
-                mboxfh.close()
-                gzfh.close()
-                _mbox = mbox(mboxtmp)
-                return list(_mbox)
-        except IOError, io:
-            log.exception(io)
