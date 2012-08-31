@@ -37,8 +37,7 @@ def createsnapshots(mailinglist):
 def imp(x):
     return SnapshotOfMailingList( datetime.fromtimestamp(x['timestamp']).date(), x['mailinglist_id'], x['subscribers'], x['posts_today'] )
 
-def go(data):
-    interval = 8
+def go(data,interval):
     while len(data):
         for x in data[:interval]:
             Session.add(imp(x))
