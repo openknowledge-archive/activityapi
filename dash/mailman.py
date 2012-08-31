@@ -8,6 +8,7 @@ from StringIO import StringIO
 from gzip import GzipFile
 from tempfile import mkstemp
 from mailbox import mbox
+import re
 
 def scrape_mailinglists(verbose=False):
     """Scrape the server for a catalogue of all mailing lists."""
@@ -78,7 +79,7 @@ def iterate_messages(url, verbose=False, since_date=None, max_months=0):
     r = requests.get(url)
     tree = html.fromstring(r.text)
     _date_links = tree.cssselect('a')
-    date_links = [ url+x.attrib['href'] for x in _date_links if x.attrib['href'].endswith('.gz') ]
+    date_links = [ url+'/'+x.attrib['href'] for x in _date_links if x.attrib['href'].endswith('.gz') ]
     count=0
     for url in date_links:
         if max_months and count==max_months:
@@ -86,7 +87,7 @@ def iterate_messages(url, verbose=False, since_date=None, max_months=0):
             return
         if verbose: print '  -> %s' % url
         source_url = url.replace('.txt.gz','/')
-        mailbox = _url_to_mailbox(url)
+        mailbox = _url_to_mailbox(url,verbose)
         for message in mailbox:
             if since_date and message['date']<=since_date:
                 if verbose: print '  -> Reached since_date.' 
@@ -95,7 +96,7 @@ def iterate_messages(url, verbose=False, since_date=None, max_months=0):
             yield message
         count += 1
 
-def _url_to_mailbox(url):
+def _url_to_mailbox(url,verbose=False):
     r = requests.get(url)
     buf = StringIO(r.content)
     content = GzipFile(fileobj=buf, mode='rb').read()
@@ -104,7 +105,13 @@ def _url_to_mailbox(url):
     f = open(tmp,'w')
     f.write(content)
     f.close()
-    out = [ _dictize_message(x) for x in mbox(tmp) ]
+    out = []
+    for message in mbox(tmp):
+        d = _dictize_message(message)
+        if d['date']:
+            out.append(d)
+        else:
+            if verbose: print 'Skipping message with no date (author=%s subject=%s)' % (message['author'],message['title'])
     # Descending chronological order
     return sorted(out, key=lambda x:x['date'], reverse=True)
 
@@ -113,11 +120,28 @@ def _dictize_message(message):
     subject = subjects[-1] if subjects else '(No Subject)'
     
     dates = message.get_all('Date')
-    date = dates[-1] if dates else '(No date)'
-    date = date.rsplit(' +', 1)[0].rsplit(' -', 1)[0].strip()
-    date = datetime.strptime(date, '%a, %d %b %Y %H:%M:%S')
+    date = None
+    if dates:
+        date = dates[-1].rsplit(' +', 1)[0].rsplit(' -', 1)[0].strip()
+        try:
+            date = datetime.strptime(date, '%a, %d %b %Y %H:%M:%S')
+        except ValueError:
+            try:
+                date = datetime.strptime(date, '%a, %d %b %Y %H:%M')
+            except ValueError:
+                pass
+    # Extract an email address
+    email = message.get_from().split('  ')[0]
+    email = email.replace(' at ','@')
+    # Extract an author name
+    author = ''
+    r = re.compile('\((.*)\)')
+    match = r.search(message.get('from') or '')
+    if match:
+        author = match.group(1)
     return {
-        'author': message.get_from().split('  ')[0],
+        'author': author,
+        'email': email,
         'title': subject,
         'date' : date,
         }
