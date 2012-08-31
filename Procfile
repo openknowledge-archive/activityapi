@@ -1,1 +1,1 @@
-web: ./frontend.py
+web: newrelic-admin run-program python frontend.py
