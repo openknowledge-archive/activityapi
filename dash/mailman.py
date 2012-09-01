@@ -62,7 +62,7 @@ def scrape_activity(verbose=False):
         # Walk through message history from the web front-end
         archive_url = l.link.replace('mailman/listinfo','pipermail')
         limit = 100
-        latest_id = latest.message_id if latest else 0
+        latest_id = latest.message_id if latest else -1
         for msg in _iterate_messages_individual(archive_url,latest_id, verbose=verbose):
             if verbose: print '  -> got msg #%d (%s: "%s")' % (msg['id'],msg['email'],msg['subject'])
 
@@ -103,14 +103,18 @@ def _iterate_messages_individual(url, latest_id, verbose=False):
                 'subject' : a[0].text_content().strip(),
                 'id' : int( a[1].attrib['name'] )
             }
-            if latest_id and out['id']==latest_id:
+            if latest_id>=0 and out['id']<=latest_id:
                 if verbose: print '  -> No further messages'
                 return
             # Download further message details (date & author) from the message's page
             r = requests.get(out['link'])
             msg_tree = html.fromstring(r.text)
             tmp_date = msg_tree.cssselect('i')[0].text_content() 
-            out['date'] = datetime.strptime(tmp_date,'%a %b %d %H:%M:%S %Z %Y')
+            try:
+                out['date'] = datetime.strptime(tmp_date,'%a %b %d %H:%M:%S %Z %Y')
+            except ValueError as e:
+                if verbose: print 'Couldnt handle date "%s"' % tmp_date
+                return
             out['email'] = msg_tree.cssselect('a')[0].text_content().strip().replace(' at ','@')
             yield out
 
