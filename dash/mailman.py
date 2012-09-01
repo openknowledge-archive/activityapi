@@ -109,9 +109,14 @@ def _iterate_messages_individual(url, latest_id, verbose=False):
             # Download further message details (date & author) from the message's page
             r = requests.get(out['link'])
             msg_tree = html.fromstring(r.text)
-            tmp_date = msg_tree.cssselect('i')[0].text_content() 
+            # Note: Platform-specific implementations can't all handle BST/GMT strings
+            # eg. Thu May 10 14:07:52 BST 2012
+            tmp_date = msg_tree.cssselect('i')[0].text_content().split(' ')
+            tmp_date = tmp_date[:4] + [tmp_date[5]]
+            # eg. Thu May 10 14:07:52 2012
+            tmp_date = ' '.join(tmp_date)
             try:
-                out['date'] = datetime.strptime(tmp_date,'%a %b %d %H:%M:%S %Z %Y')
+                out['date'] = datetime.strptime(tmp_date,'%a %b %d %H:%M:%S %Y')
             except ValueError as e:
                 if verbose: print 'Couldnt handle date "%s"' % tmp_date
                 return
