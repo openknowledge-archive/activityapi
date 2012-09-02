@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 from dash.backend import Session
 from dash.backend.model import Timestamp
 from time import gmtime, strftime
