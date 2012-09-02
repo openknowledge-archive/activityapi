@@ -70,8 +70,8 @@ class SnapshotOfRepo(Base):
         }
 
 
-class MailingList(Base):
-    __tablename__='mailinglist'
+class Mailman(Base):
+    __tablename__='mailman'
     id = Column(Integer, primary_key=True)
     name = Column(String)
     link = Column(String)
@@ -89,14 +89,14 @@ class MailingList(Base):
                 'description': self.description,
                 }
 
-class SnapshotOfMailingList(Base):
-    __tablename__='snapshot_mailinglist'
-    mailinglist_id = Column(Integer, ForeignKey('mailinglist.id'), primary_key=True)
+class SnapshotOfMailman(Base):
+    __tablename__='snapshot_mailman'
+    mailman_id = Column(Integer, ForeignKey('mailman.id'), primary_key=True)
     timestamp = Column(Date, primary_key=True) 
     subscribers = Column(Integer)
     posts_today = Column(Integer)
-    def __init__(self, timestamp, mailinglist_id, subscribers, posts_today):
-        self.mailinglist_id = mailinglist_id
+    def __init__(self, timestamp, mailman_id, subscribers, posts_today):
+        self.mailman_id = mailman_id
         self.timestamp = timestamp
         self.subscribers = subscribers
         self.posts_today = posts_today
@@ -204,17 +204,17 @@ class ActivityInBuddypress(Base):
             return 'User %s updated profile (json=%s)' % (self.login, self.json[:50])
         return 'ActivityInBuddypress (type=%s login=%s)' % (self.type,self.login)
 
-class ActivityInMailingList(Base):
+class ActivityInMailman(Base):
     __tablename__='activity_mailman'
-    mailinglist_id  = Column(Integer, primary_key=True)
+    mailman_id  = Column(Integer, primary_key=True)
     message_id = Column(Integer, primary_key=True)
     subject = Column(String)
     author = Column(String)
     email = Column(String)
     link = Column(String)
     timestamp = Column(DateTime)
-    def __init__(self, mailinglist_id, message_id, subject, author, email, link, timestamp):
-        self.mailinglist_id = mailinglist_id
+    def __init__(self, mailman_id, message_id, subject, author, email, link, timestamp):
+        self.mailman_id = mailman_id
         self.message_id = message_id
         self.subject = subject
         self.author = author
@@ -223,7 +223,7 @@ class ActivityInMailingList(Base):
         self.timestamp = timestamp
     def json(self):
         return {
-            'mailinglist_id'  : self.mailinglist_id,
+            'mailman_id'  : self.mailman_id,
             'message_id' : self.message_id,
             'subject' : self.subject,
             'author' : self.author,

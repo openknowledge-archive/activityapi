@@ -2,7 +2,7 @@ from lxml import html
 import requests
 import os
 from dash.backend import Session
-from dash.backend.model import MailingList, SnapshotOfMailingList, ActivityInMailingList
+from dash.backend.model import Mailman, SnapshotOfMailman, ActivityInMailman
 from datetime import datetime,timedelta
 from StringIO import StringIO
 from gzip import GzipFile
@@ -11,10 +11,10 @@ from mailbox import mbox
 import re
 
 
-###  Maintain a database of mailing lists
+###  Maintain a database of mailman lists
 
-def scrape_mailinglists(verbose=False):
-    """Scrape the server for a catalogue of all mailing lists."""
+def scrape_mailman(verbose=False):
+    """Scrape the server for a catalogue of all mailman lists."""
     r = requests.get('http://lists.okfn.org')
     if verbose: print 'Fetching %s' % r.url
     tree = html.fromstring( r.text )
@@ -28,35 +28,35 @@ def scrape_mailinglists(verbose=False):
             description = cells[1].text_content()
             if 'listinfo' in link:
                 out[name] = { 'link':link, 'description':description }
-    if verbose: print 'Got %d mailinglists' % len(out)
+    if verbose: print 'Got %d mailman lists' % len(out)
     return out
 
-def save_mailinglists( mailinglists, verbose=False ):
+def save_mailman( mailman, verbose=False ):
     # Add and update
-    for k,v in mailinglists.items():
-        l = Session.query(MailingList).filter(MailingList.name==k).first()
+    for k,v in mailman.items():
+        l = Session.query(Mailman).filter(Mailman.name==k).first()
         if l:
             l.update(k,v['link'],v['description'])
         else:         
             if verbose: print 'Adding new list %s' % k
-            l = MailingList(k,v['link'],v['description'])
+            l = Mailman(k,v['link'],v['description'])
             Session.add( l )
     # Delete
-    for ml in Session.query(MailingList):
-        if not ml.name in mailinglists:
+    for ml in Session.query(Mailman):
+        if not ml.name in mailman:
             if verbose: print 'Deleting old list %s' % ml.name
             Session.delete(ml)
     Session.commit()
 
 
-###  Get mailinglist activity
+###  Get mailman activity
 
 def scrape_activity(verbose=False):
-    for l in Session.query(MailingList):
+    for l in Session.query(Mailman):
         if verbose: print 'Processing activity for %s...' % l.name
-        latest = Session.query(ActivityInMailingList)\
-                .filter(ActivityInMailingList.mailinglist_id==l.id)\
-                .order_by(ActivityInMailingList.message_id.desc())\
+        latest = Session.query(ActivityInMailman)\
+                .filter(ActivityInMailman.mailman_id==l.id)\
+                .order_by(ActivityInMailman.message_id.desc())\
                 .first()
 
         # Walk through message history from the web front-end
@@ -66,7 +66,7 @@ def scrape_activity(verbose=False):
         for msg in _iterate_messages_individual(archive_url,latest_id, verbose=verbose):
             if verbose: print '  -> got msg #%d (%s: "%s")' % (msg['id'],msg['email'],msg['subject'])
 
-            Session.add( ActivityInMailingList(
+            Session.add( ActivityInMailman(
                 l.id, 
                 msg['id'], 
                 msg['subject'],
@@ -121,17 +121,17 @@ def _iterate_messages_individual(url, latest_id, verbose=False):
             yield out
 
 
-###  Snapshot all mailinglists ( # subscribers, # posts per day )
+###  Snapshot all mailman lists ( # subscribers, # posts per day )
 
-def snapshot_mailinglists(verbose=False):
+def snapshot_mailman(verbose=False):
     day = timedelta(days=1)
     today = datetime.now().date()
     until = today - day
-    for l in Session.query(MailingList):
+    for l in Session.query(Mailman):
         if verbose: print 'Processing snapshots for %s...' % l.name
-        latest = Session.query(SnapshotOfMailingList)\
-                .filter(SnapshotOfMailingList.mailinglist_id==l.id)\
-                .order_by(SnapshotOfMailingList.timestamp.desc())\
+        latest = Session.query(SnapshotOfMailman)\
+                .filter(SnapshotOfMailman.mailman_id==l.id)\
+                .order_by(SnapshotOfMailman.timestamp.desc())\
                 .first()
         # By default, gather 30 days of snapshots
         since = until - timedelta(days=30)
@@ -154,7 +154,7 @@ def snapshot_mailinglists(verbose=False):
                 post_tally[ d ] += 1
         # Write snapshots to the database
         for (date,posts_today) in post_tally.items():
-            o = SnapshotOfMailingList( date, l.id, num_subscribers, posts_today )
+            o = SnapshotOfMailman( date, l.id, num_subscribers, posts_today )
             Session.add(o)
             if verbose: print '  -> ',o.json()
         if verbose: print '  -> Done. Got %d snapshots' % len(post_tally)
