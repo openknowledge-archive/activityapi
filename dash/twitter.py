@@ -65,32 +65,3 @@ def _connect():
     auth.set_access_token(access_token,access_token_secret)
     return tweepy.API(auth)
 
-
-## Twitter utility methods (for interactive mode)
-
-def _list_name(username):
-    """Look up which partitioned list is used to monitor this user"""
-    l = username[0] 
-    if l<'0': raise ValueError(l)
-    if l<='_': return LISTS[0]
-    if l<='d': return LISTS[1]
-    if l<='j': return LISTS[2]
-    if l<='r': return LISTS[3]
-    if l<='z': return LISTS[4]
-    raise ValueError(l)
-
-def add_all(names,lists):
-    for x in names:
-        try:
-            lists[_list_name(x)].add_member(x)
-            print 'done:',x
-        except tweepy.error.TweepError:
-            print 'failed to add',x
-
-def all_members(api,lst):
-    """Which users are in this list?"""
-    c = tweepy.Cursor(api.list_members,lst.user.screen_name,lst.slug)
-    return [x for x in c.items()]
-
-
-

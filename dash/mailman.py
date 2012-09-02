@@ -63,7 +63,7 @@ def scrape_activity(verbose=False):
         archive_url = l.link.replace('mailman/listinfo','pipermail')
         limit = 100
         latest_id = latest.message_id if latest else -1
-        for msg in _iterate_messages_individual(archive_url,latest_id, verbose=verbose):
+        for msg in _iterate_messages(archive_url,latest_id, verbose=verbose):
             if verbose: print '  -> got msg #%d (%s: "%s")' % (msg['id'],msg['email'],msg['subject'])
 
             Session.add( ActivityInMailman(
@@ -81,7 +81,7 @@ def scrape_activity(verbose=False):
                 break;
         Session.commit()
 
-def _iterate_messages_individual(url, latest_id, verbose=False):
+def _iterate_messages(url, latest_id, verbose=False):
     if verbose: print 'Fetching list index %s...' % url
     r = requests.get(url)
     tree = html.fromstring(r.text)
@@ -143,21 +143,16 @@ def snapshot_mailman(verbose=False):
         # Download subscriber list
         roster_url = l.link.replace('listinfo','roster')
         num_subscribers = len(_scrape_subscribers(roster_url, verbose=verbose))
-        # Walk through message history, counting messages per day
-        post_tally = { x:0 for x in _daterange(since,until) }
-        archive_url = l.link.replace('mailman/listinfo','pipermail')
-        for message in _iterate_message_archives(archive_url,verbose):
-            d = message['date'].date()
-            if d < since:
-                break
-            if d <= until:
-                post_tally[ d ] += 1
-        # Write snapshots to the database
-        for (date,posts_today) in post_tally.items():
+        # Create a snapshot of each day
+        for date in _daterange(since,until):
+            posts_today = Session.query(ActivityInMailman)\
+                            .filter(ActivityInMailman.mailman_id==l.id)\
+                            .filter(ActivityInMailman.timestamp.between(date,date+day))\
+                            .count()
             o = SnapshotOfMailman( date, l.id, num_subscribers, posts_today )
             Session.add(o)
             if verbose: print '  -> ',o.json()
-        if verbose: print '  -> Done. Got %d snapshots' % len(post_tally)
+        # Walk through message history, counting messages per day
         Session.commit()
 
 def _daterange(since,until):
@@ -183,63 +178,3 @@ def _scrape_subscribers(url, verbose=False):
     links = filter( lambda x: '--at--' in x.attrib['href'], _links )
     return { x.text_content : x.attrib['href'] for x in links }
     
-def _iterate_message_archives(url, verbose=False):
-    if verbose: print 'Fetching list index %s...' % url
-    r = requests.get(url)
-    tree = html.fromstring(r.text)
-    _gzip_links = tree.cssselect('a')
-    gzip_links = [ url+'/'+x.attrib['href'] for x in _gzip_links if x.attrib['href'].endswith('.gz') ]
-    for url in gzip_links:
-        if verbose: print '  -> %s' % url
-        mailbox = _scrape_gzip_archive(url)
-        for message in mailbox:
-            yield message
-
-def _scrape_gzip_archive(url):
-    r = requests.get(url)
-    buf = StringIO(r.content)
-    content = GzipFile(fileobj=buf, mode='rb').read()
-    # mbox requires we dump this to a temp file
-    tmp = mkstemp()[1]
-    f = open(tmp,'w')
-    f.write(content)
-    f.close()
-    # Iterate through the archive, ignoring those with no valid date attached
-    out = [ _dictize_message(x) for x in mbox(tmp) if x['date'] ]
-    # Descending chronological order
-    return sorted(out, key=lambda x:x['date'], reverse=True)
-
-def _dictize_message(message):
-    """Utility method. Not all these fields are 
-       really used, but this is how it's done."""
-    subjects = message.get_all('Subject')
-    subject = subjects[-1] if subjects else '(No Subject)'
-    
-    dates = message.get_all('Date')
-    date = None
-    if dates:
-        tmp = dates[-1].rsplit(' +', 1)[0].rsplit(' -', 1)[0].strip()
-        try:
-            date = datetime.strptime(tmp, '%a, %d %b %Y %H:%M:%S')
-        except ValueError:
-            try:
-                date = datetime.strptime(tmp, '%a, %d %b %Y %H:%M')
-            except ValueError:
-                pass
-    # Extract an email address
-    email = message.get_from().split('  ')[0]
-    email = email.replace(' at ','@')
-    # Extract an author name
-    author = ''
-    r = re.compile('\((.*)\)')
-    match = r.search(message.get('from') or '')
-    if match:
-        author = match.group(1)
-    return {
-        'author': author,
-        'email': email,
-        'title': subject,
-        'date' : date,
-        }
-
-
