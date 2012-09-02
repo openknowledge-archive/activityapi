@@ -1,13 +1,17 @@
 #!/usr/bin/env python 
 
-import dash.twitter
+from dash import twitter
 import argparse
 
-if __name__=='__main__':
-    parser = argparse.ArgumentParser(description='Update the tweets table')
+def main():
+    parser = argparse.ArgumentParser(description='Scrape Twitter activity into the database.')
     parser.add_argument('--since', default='', type=str, help='Download tweets since this tweet ID'),
+    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='Verbose output')
     arg = parser.parse_args()
-    dash.twitter.scrape_tweets(since=arg.since)
+    twitter.scrape_tweets(since=arg.since,verbose=arg.verbose)
+
+if __name__=='__main__':
+    main()
 
 
 
