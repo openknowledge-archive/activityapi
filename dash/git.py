@@ -1,44 +1,71 @@
 from github import Github
 from dash.backend import Session
 from dash.backend.model import Repo, SnapshotOfRepo, Person, EventGithub
-from datetime import datetime
+from datetime import datetime,timedelta
 
-def scrape_repos():
+def scrape_repos(verbose=False):
+    if verbose: print 'Connecting to GitHub...'
     gh = Github()
+    if verbose: print 'Fetching profile for "okfn"...'
     okfn = gh.get_organization('okfn')
-    # Slow, paginated server call:
-    return { x.full_name : {'gh_repo':x} for x in okfn.get_repos() }
+    if verbose: print 'Scraping repository list (slow)...'
+    out = { x.full_name : x for x in okfn.get_repos() }
+    if verbose: print 'Got %d repos.' % len(out)
+    assert len(out) > 0, 'Wont proceed without receiving some repos from server.'
+    return out
 
-def save_repos( gh_repos ):
+def save_repos(gh_repos, verbose=False):
     """Update the 'repo' table"""
     # Add and update
     for k,v in gh_repos.items():
         # v is a dict of a 'repo' (from our ORM) and a 'gh_repo' (from the library)
-        v['repo'] = Session.query(Repo).filter(Repo.full_name==k).first()
-        if v['repo']:
-            v['repo'].update(v['gh_repo'])
+        repo = Session.query(Repo).filter(Repo.full_name==k).first()
+        if repo:
+            repo.update(v)
         else:
-            v['repo'] = Repo(v['gh_repo'])
-            Session.add( v['repo'] )
+            if verbose: print 'Adding new repo %s' % v.full_name
+            repo = Repo(v)
+            Session.add(repo)
     # Delete
     for repo in Session.query(Repo):
         if not repo.full_name in gh_repos:
+            if verbose: print 'Deleting repo %s' % repo.full_name
             Session.delete(repo)
     # Commit now to ensure repo.id is auto-assigned
     Session.commit()
-    # Snapshot
-    now = datetime.now()
-    for k,v in gh_repos.items():
-        repo_id = v['repo'].id
-        x = v['gh_repo']
-        snapshot = SnapshotOfRepo( now, repo_id, x.open_issues, x.size, x.watchers, x.forks )
-        Session.add(snapshot)
-    Session.commit()
+
+def snapshot_repos(gh_repos, verbose=False):
+    """Create SnapshotOfRepo objects in the database for 
+       every day since the last time this was run."""
+    day = timedelta(days=1)
+    today = datetime.now().date()
+    until = today - day
+    for r in Session.query(Repo):
+        if verbose: print 'Processing snapshots for %s...' % r.full_name
+        latest = Session.query(SnapshotOfRepo)\
+                .filter(SnapshotOfRepo.repo_id==r.id)\
+                .order_by(SnapshotOfRepo.timestamp.desc())\
+                .first()
+        # By default, gather 30 days of snapshots
+        since = until - timedelta(days=30)
+        if latest:
+            if latest.timestamp>=until:
+                if verbose: print ' -> most recent snapshots have already been processed.'
+                continue
+            since = latest.timestamp + day
+        # Snapshot date for the last day (or more)
+        gh_repo = gh_repos[ r.full_name ]
+        while since <= until:
+            snapshot = SnapshotOfRepo( since, r.id, gh_repo.open_issues, gh_repo.size, gh_repo.watchers, gh_repo.forks )
+            if verbose: print '  -> ',snapshot.json()
+            Session.add(snapshot)
+            since += timedelta(days=1)
+        Session.commit()
 
 
 # Activity scrapers
 
-def scrape_github(verbose=False):
+def scrape_github_activity(verbose=False):
     q = Session.query(Person).filter(Person.github!=None)
     gh = Github()
     for x in q:
