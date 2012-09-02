@@ -2,10 +2,12 @@ from dash.backend import Session, model
 import util
 import string
 import re
+import json
+import requests
 
 
 def scrape_users( url , payload=None, verbose=False):
-    obj = util.download_json(url,payload)
+    obj = _scrape_endpoint(url,payload)
     users = obj['users']
     if verbose:
         print 'Received %d rows from database.' % len(users)
@@ -37,6 +39,16 @@ def save_users( usermap, verbose=False ):
 
 
 ## Util methods
+
+def _scrape_endpoint(url,payload=None):
+    r = requests.get( url, params=payload )
+    assert r.status_code==200
+    try:
+        return json.loads( r.text )
+    except ValueError:
+        print 'bad json:'
+        print r.text
+        raise ValueError('No JSON object could be decoded.')
 
 def _clean(user):
     user['user_id'] = int(user['user_id'])

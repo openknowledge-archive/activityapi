@@ -1,7 +1,6 @@
-from dash.frontend import app
+from dash.frontend import app,util
 from dash.backend import Session
 from dash.backend.model import *
-import dash.util
 from flask import request, make_response
 from datetime import datetime,timedelta
 import json
@@ -47,21 +46,21 @@ def twitter_tweets():
 
 def twitter_ratelimit():
     import dash.twitter
-    api = dash.twitter.get_api()
+    api = dash.twitter._connect()
     return  api.rate_limit_status() 
 
 def twitter_trends():
     hours = 12
     since = datetime.now() - timedelta(hours=hours)
     q = Session.query(Tweet).filter(Tweet.timestamp >= since)
-    freq = dash.util.freq_table( q )
+    freq = util.freq_table( q )
     data = {
         'since' : since.isoformat(),
         'since_hours' : hours,
         'count_tweets' : q.count(),
-        'hashtags' : dash.util.analyse(freq,hashtags=True,results=5),
-        'urls' : dash.util.analyse(freq,links=True,results=5),
-        'words' : dash.util.analyse(freq)
+        'hashtags' : util.analyse(freq,hashtags=True,results=5),
+        'urls' : util.analyse(freq,links=True,results=5),
+        'words' : util.analyse(freq)
     }
     return data 
 
