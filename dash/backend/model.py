@@ -174,10 +174,11 @@ class Person(Base):
         return out
     def json(self):
         fields = [  'website', 'about', 'user_id', 'last_active',
-                    'twitter', 'registered', 'permalink', 'location',
+                    'twitter', 'permalink', 'location',
                     'display_name', 'login', 'email', 'avatar', 
                     '_opinion', '_projects']
         out = { x:self.__getattribute__(x) for x in fields }
+        out['registered'] = self.registered.isoformat()
         return out
 
 class ActivityInBuddypress(Base):
