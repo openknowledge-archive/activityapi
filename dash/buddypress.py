@@ -3,6 +3,7 @@ import string
 import re
 import json
 import requests
+from datetime import datetime
 
 
 def scrape_users( url , payload=None, verbose=False):
@@ -28,6 +29,7 @@ def save_users( usermap, verbose=False ):
             Session.delete(existing)
     for x in addme:
         user = usermap[x]
+        user['registered'] = _parse_date(user['registered'])
         person = model.Person.parse(user)
         Session.add(person)
         diff = model.ActivityInBuddypress('add',person)
@@ -103,4 +105,13 @@ def _diff(person, data, verbose=False):
             person.__setattr__(k,v)
     if changed:
         Session.add(person)
+
+def _parse_date(date):
+    parse = lambda x : datetime.strptime(x,'%Y-%m-%d %H:%M:%S')
+    try:
+        return parse(date)
+    except Exception as e:
+        from sys import stderr
+        print >>stderr,'Exception processing date %s'%date, e
+        return parse('2012-01-01 00:00:01')
 

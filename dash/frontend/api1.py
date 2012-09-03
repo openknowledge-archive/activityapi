@@ -64,6 +64,13 @@ def twitter_trends():
     }
     return data 
 
+def trends_registered():
+    since_days = 365
+    now = datetime.now().date() 
+    day = now - timedelta(days=since_days)
+
+
+
 def person_list():
     count = Session.query(Person).count()
     q = Session.query(Person).order_by(Person.user_id.desc())
