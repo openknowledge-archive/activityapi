@@ -1,5 +1,4 @@
 from dash.backend import Session, model
-import util
 import string
 import re
 import json
