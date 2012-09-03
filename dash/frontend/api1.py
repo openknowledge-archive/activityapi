@@ -67,7 +67,37 @@ def twitter_trends():
 def trends_registered():
     since_days = 365
     now = datetime.now().date() 
-    day = now - timedelta(days=since_days)
+    pointer = now - timedelta(days=since_days)
+    # Rolling count of how many registered users there were
+    num_people = Session.query(Person).filter(Person.registered<pointer).count()
+    data = []
+    q = Session.query(Person)\
+            .filter(Person.registered>=pointer)\
+            .order_by(Person.registered.desc()) 
+    people = list(q)
+    while pointer<now:
+        names = []
+        while people and people[-1].registered.date()<=pointer:
+            names.append( people.pop().login )
+        num_people += len(names)
+        data.append({
+            'date': pointer.isoformat(),
+            'num_people':num_people,
+            'new_users':names
+        })
+        pointer += timedelta(days=1)
+    return {
+        'total_users': num_people,
+        'num_days': since_days,
+        'history' : data
+        }
+
+def activity_user():
+    username = 'zephod'
+    return {
+            'username':username
+            }
+
 
 
 
