@@ -92,12 +92,14 @@ def _diff(person, data, verbose=False):
     """Update the model with new key/value pairs"""
     changed = False
     for (k,v) in data.items():
+        # Perhaps this should be handled elsewhere. We translate it from string to datetime.
+        if k=='registered': continue
         old = person.__getattribute__(k)
         if not old==v:
             # Don't store a diff if I update stupid fields like '_twitter' 
             if not (k[0]=='_' or k=='last_active'):
                 # I like to track changes people make to their profiles
-                diff = model.ActivityInBuddypress('update',person, {'attribute':k,'old_value':old,'new_value':v})
+                diff = model.ActivityInBuddypress('update',person, {'attribute':k,'old_value':str(old),'new_value':str(v)})
                 Session.add(diff)
                 if verbose:
                     print diff
