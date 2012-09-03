@@ -66,12 +66,16 @@ def snapshot_repos(gh_repos, verbose=False):
 # Activity scrapers
 
 def scrape_github_activity(verbose=False):
+    from sys import stderr
     q = Session.query(Person).filter(Person.github!=None)
     gh = Github()
     for x in q:
         if verbose: print 'Scraping events for %s (%s)...' % (x.display_name,x.login)
-        gh_user = gh.get_user(x.github)
-        _scrape_user_events( x.id, gh_user, verbose )
+        try:
+            gh_user = gh.get_user(x.github)
+            _scrape_user_events( x.id, gh_user, verbose )
+        except Exception as e:
+            print >>stderr,'Exception processing github user %s' % x.login, e
     Session.commit()
   
 def _scrape_user_events( user_id, gh_user, verbose=False ):
