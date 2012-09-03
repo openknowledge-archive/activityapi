@@ -151,7 +151,7 @@ def snapshot_mailman(verbose=False):
                             .count()
             o = SnapshotOfMailman( date, l.id, num_subscribers, posts_today )
             Session.add(o)
-            if verbose: print '  -> ',o.json()
+            if verbose: print '  -> ',o.toJson()
         # Walk through message history, counting messages per day
         Session.commit()
 

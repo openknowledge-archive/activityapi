@@ -34,7 +34,7 @@ class Repo(Base):
         self.homepage = repo.homepage
         self.html_url = repo.html_url
         self.language = repo.language
-    def json(self):
+    def toJson(self):
         return {
             'created_at' : self.created_at ,
             'description' : self.description ,
@@ -60,7 +60,7 @@ class SnapshotOfRepo(Base):
         self.size = size
         self.watchers = watchers
         self.forks = forks
-    def json(self):
+    def toJson(self):
         return {
             'timestamp': self.timestamp,
             'open_issues': self.open_issues,
@@ -82,7 +82,7 @@ class Mailman(Base):
         self.name = name
         self.link = link
         self.description = description
-    def json(self):
+    def toJson(self):
         return {
                 'name': self.name,
                 'link': self.link,
@@ -100,7 +100,7 @@ class SnapshotOfMailman(Base):
         self.timestamp = timestamp
         self.subscribers = subscribers
         self.posts_today = posts_today
-    def json(self):
+    def toJson(self):
         return {
             'timestamp': self.timestamp,
             'subscribers': self.subscribers,
@@ -135,7 +135,7 @@ class Tweet(Base):
         if self.geo_x and self.geo_y:
             return [self.geo_x, self.geo_y]
 
-    def json(self):
+    def toJson(self):
         out = self.__dict__
         return {
             'id': self.id,
@@ -172,7 +172,7 @@ class Person(Base):
         for (k,v) in source_dict.items():
             out.__setattr__(k, v)
         return out
-    def json(self):
+    def toJson(self):
         fields = [  'website', 'about', 'user_id', 'last_active',
                     'twitter', 'permalink', 'location',
                     'display_name', 'login', 'email', 'avatar', 
@@ -186,7 +186,8 @@ class ActivityInBuddypress(Base):
     id = Column(Integer, primary_key=True)
     login = Column(String)
     type = Column(String)
-    timestamp = Column(String)
+    timestamp = Column(DateTime)
+    timestamp_string = Column(String)
     json = Column(String)
     def __init__(self, type, person, metadata={}, timestamp=None):
         if not timestamp:
@@ -205,6 +206,13 @@ class ActivityInBuddypress(Base):
         if self.type=='update':
             return 'User %s updated profile (json=%s)' % (self.login, self.json[:50])
         return 'ActivityInBuddypress (type=%s login=%s)' % (self.type,self.login)
+    def toJson(self):
+        return {
+            'login':self.login,
+            'type':self.type,
+            'timestamp':self.timestamp.isoformat(),
+            'json':self.json,
+        }
 
 class ActivityInMailman(Base):
     __tablename__='activity_mailman'
@@ -223,7 +231,7 @@ class ActivityInMailman(Base):
         self.email = email
         self.link = link
         self.timestamp = timestamp
-    def json(self):
+    def toJson(self):
         return {
             'mailman_id'  : self.mailman_id,
             'message_id' : self.message_id,
@@ -231,14 +239,15 @@ class ActivityInMailman(Base):
             'author' : self.author,
             'email' : self.email,
             'link' : self.link,
-            'timestamp' : self.timestamp,
+            'timestamp' : self.timestamp.isoformat(),
         }
 
-class EventGithub(Base):
+class ActivityInGithub(Base):
     __tablename__='activity_github'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer)
-    timestamp = Column(String)
+    timestamp = Column(DateTime)
+    timestamp_string = Column(String)
     type = Column(String)
     repo = Column(String)
     payload = Column(String)
@@ -249,11 +258,11 @@ class EventGithub(Base):
         self.type = event.type
         self.repo = event.repo.name
         self.payload = json.dumps(event.payload)
-    def json(self):
+    def toJson(self):
         return {
             'id' : self.id,
             'user_id' : self.user_id,
-            'timestamp' : self.timestamp,
+            'timestamp' : self.timestamp.isoformat(),
             'type' : self.type,
             'repo' : self.repo,
             'payload' : self.payload,

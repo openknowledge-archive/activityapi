@@ -1,6 +1,6 @@
 from github import Github
 from dash.backend import Session
-from dash.backend.model import Repo, SnapshotOfRepo, Person, EventGithub
+from dash.backend.model import Repo, SnapshotOfRepo, Person, ActivityInGithub
 from datetime import datetime,timedelta
 
 def scrape_repos(verbose=False):
@@ -57,7 +57,7 @@ def snapshot_repos(gh_repos, verbose=False):
         gh_repo = gh_repos[ r.full_name ]
         while since <= until:
             snapshot = SnapshotOfRepo( since, r.id, gh_repo.open_issues, gh_repo.size, gh_repo.watchers, gh_repo.forks )
-            if verbose: print '  -> ',snapshot.json()
+            if verbose: print '  -> ',snapshot.toJson()
             Session.add(snapshot)
             since += timedelta(days=1)
         Session.commit()
@@ -80,7 +80,7 @@ def scrape_github_activity(verbose=False):
   
 def _scrape_user_events( user_id, gh_user, verbose=False ):
     max = 30
-    _latest = Session.query(EventGithub).filter(EventGithub.user_id==user_id).order_by(EventGithub.id.desc()).first()
+    _latest = Session.query(ActivityInGithub).filter(ActivityInGithub.user_id==user_id).order_by(ActivityInGithub.id.desc()).first()
     latest = _latest.id if _latest else 0
     if verbose: print '  latest=%d' % latest
     for x in gh_user.get_events():
@@ -91,6 +91,6 @@ def _scrape_user_events( user_id, gh_user, verbose=False ):
             if verbose: print '  scraped %d events. (no further events available)'%(30-max)
             break
         if verbose: print '  > type=%s  id=%s' % (x.type,x.id)
-        Session.add( EventGithub(user_id, x) )
+        Session.add( ActivityInGithub(user_id, x) )
         max -= 1
 
