@@ -4,52 +4,81 @@ from dash.backend.model import *
 from flask import request, make_response
 from datetime import datetime,timedelta
 import json
+import functools
 
+#### Utilities
+
+def endpoint(rule, **options):
+    """Function decorator borrowed & modified from Flask core."""
+    BASE='/api/1'
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapped_fn():
+            callback = request.args.get('callback')
+            try:
+                raw = f()
+            except (AssertionError, ValueError) as e:
+                if request.args.get('_debug') is not None:
+                    raise e
+                raw = { 'ok': False, 'message' : e.message }
+            response_text = json.dumps(raw)
+            if callback:
+                response_text = '%s(%s);' % (callback,response_text)
+            response = make_response(response_text)
+            response.headers['content-type'] = 'application/json'
+            return response
+        endpoint = options.pop('endpoint', None)
+        app.add_url_rule(BASE+rule, endpoint, wrapped_fn, **options)
+        return f
+    return decorator
+
+def _prepare(total=None, per_page=10):
+    """Prepare a response object based off the incoming args (assume pagination)"""
+    response = {}
+    response['ok'] = True
+    response['page'] = int(request.args.get('page',0))
+    response['per_page'] = int(request.args.get('per_page',per_page))
+    response['offset'] = response['per_page'] * response['page']
+    assert response['page']>=0, 'Page number out of range.'
+    assert response['per_page']>0, 'per_page out of range.'
+    if total:
+        response['total'] = total
+        response['last_page'] = max(0,total-1) / response['per_page']
+    return response
+
+##################################################
+####           URL: /
+##################################################
+@endpoint('/')
 def index():
     rules = [x.rule for x in app.url_map.iter_rules()]
     endpoints = [request.url_root[:-1]+x for x in rules if x.startswith('/api/1')]
-    return {'version':'0.1','ok':True,'endpoints':endpoints}
+    return {'version':'1.0','ok':True,'endpoints':endpoints}
 
-def debug_request():
-    """Dump the user's request back at them"""
-    return {
-            'base_url' : request.base_url,
-            'url_root' : request.url_root,
-            'path' : request.path,
-            'method' : request.method,
-            'headers' : {k:v for k,v in request.headers.iteritems()},
-            'args' : request.args,
-            'form' : request.form,
-            'view_args' : request.view_args,
-    }
 
-def debug_timestamps():
-    limit = 10
-    count = Session.query(Timestamp).count()
-    q = Session.query(Timestamp).order_by(Timestamp.id.desc()).limit(limit)
-    return { 
-        'total': count, 
-        'limit': limit, 
-        'data': [ [x.id,x.now] for x in q ] 
-    }
+##################################################
+####           URLS: /data/...
+##################################################
+@endpoint('/data/timestamp')
+def data__timestamps():
+    response = _prepare( Session.query(Timestamp).count() )
+    q = Session.query(Timestamp)\
+            .order_by(Timestamp.id.desc())\
+            .offset(response['offset'])\
+            .limit(response['per_page'])
+    response['data'] = [ {'id':x.id,'now':x.now} for x in q ] 
+    return response
 
-def twitter_tweets():
-    limit = 50
-    count = Session.query(Tweet).count()
-    q = Session.query(Tweet).order_by(Tweet.tweet_id.desc()).limit(limit)
-    data = { 
-        'total': count, 
-        'limit': limit, 
-        'data': [ tweet.toJson() for tweet in q ] 
-    }
-    return data
+##################################################
+####           URLS: /activity/...
+##################################################
 
-def twitter_ratelimit():
-    import dash.twitter
-    api = dash.twitter._connect()
-    return  api.rate_limit_status() 
-
+##################################################
+####           URLS: /history/...
+##################################################
+@endpoint('/history/twitter')
 def twitter_trends():
+    # TODO fixify
     hours = 12
     since = datetime.now() - timedelta(hours=hours)
     q = Session.query(Tweet).filter(Tweet.timestamp >= since)
@@ -63,6 +92,45 @@ def twitter_trends():
         'words' : util.analyse(freq)
     }
     return data 
+
+
+##################################################
+####           URLS: /debug/...
+##################################################
+
+@endpoint('/debug/twitter_ratelimit')
+def debug__twitter_ratelimit():
+    import dash.twitter
+    api = dash.twitter._connect()
+    return api.rate_limit_status()
+
+
+@endpoint('/debug/request')
+def debug__request():
+    """Dump the user's request back at them"""
+    return {
+            'base_url' : request.base_url,
+            'url_root' : request.url_root,
+            'path' : request.path,
+            'method' : request.method,
+            'headers' : {k:v for k,v in request.headers.iteritems()},
+            'args' : request.args,
+            'form' : request.form,
+            'view_args' : request.view_args,
+    }
+
+
+def twitter_tweets():
+    limit = 50
+    count = Session.query(Tweet).count()
+    q = Session.query(Tweet).order_by(Tweet.tweet_id.desc()).limit(limit)
+    data = { 
+        'total': count, 
+        'limit': limit, 
+        'data': [ tweet.toJson() for tweet in q ] 
+    }
+    return data
+
 
 def trends_registered():
     since_days = 365

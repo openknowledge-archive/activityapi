@@ -1,7 +1,21 @@
-from flask import Flask
+from flask import Flask,request,make_response
+import json
+import util
 
 app = Flask('dash.frontend')
 app.config.from_object('dash.frontend.settings')
 
-import urls
+@app.route('/')
+def homepage():
+    return app.send_static_file('index.html')
 
+@app.route('/api/')
+def api_no_version():
+    data = { 
+            'error': 'No API version supplied', 
+            'v1': request.url_root+'api/1/',
+            }
+    return json.dumps(data)
+
+# Patch the app with API v1 endpoints
+import api1
