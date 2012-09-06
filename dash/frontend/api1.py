@@ -1,4 +1,4 @@
-from dash.frontend import app,util
+from dash.frontend import app
 from dash.backend import Session
 from dash.backend.model import *
 from flask import request, make_response
@@ -6,7 +6,9 @@ from datetime import datetime,timedelta
 import json
 import functools
 
-#### Utilities
+##################################################
+####           Utilities
+##################################################
 
 def endpoint(rule, **options):
     """Function decorator borrowed & modified from Flask core."""
@@ -68,6 +70,7 @@ def data__timestamps():
             .limit(response['per_page'])
     response['data'] = [ {'id':x.id,'now':x.now} for x in q ] 
     return response
+
 
 ##################################################
 ####           URLS: /activity/...

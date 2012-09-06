@@ -1,8 +1,10 @@
 import tweepy
 import os
+import re
 from dash.backend import Session
-from dash.backend.model import Tweet
+from dash.backend.model import Tweet,Person,SnapshotOfTwitter
 from sqlalchemy import func
+from datetime import datetime,timedelta
 
 # The user "z_cron" maintains a set of private twitter lists
 # in order to silently track everybody without murdering the API.
@@ -65,3 +67,95 @@ def _connect():
     auth.set_access_token(access_token,access_token_secret)
     return tweepy.API(auth)
 
+
+### daily snapshot_twitter mechanism
+
+def snapshot_twitter(verbose=False):
+    """Create SnapshotOfTwitter objects in the database for 
+       every day since the last time this was run."""
+    today = datetime.now().date()
+    until = today - timedelta(days=1)
+    # By default, gather 45 days of snapshots
+    since = until - timedelta(days=45)
+    # Move 'since' forward if snapshots exist
+    latest = Session.query(SnapshotOfTwitter)\
+            .order_by(SnapshotOfTwitter.timestamp.desc())\
+            .first()
+    if latest:
+        if latest.timestamp>=until:
+            if verbose: print ' -> most recent snapshots have already been processed.'
+            return
+        since = latest.timestamp + timedelta(days=1)
+    while since <= until:
+        snapshot = _create_snapshot(since)
+        if verbose: print '  -> ',snapshot.toJson()
+        Session.add(snapshot)
+        since += timedelta(days=1)
+    Session.commit()
+
+def _create_snapshot(day):
+    # Grab all tweets that day
+    q = Session.query(Tweet)\
+            .filter( Tweet.timestamp.between(day,day+timedelta(days=1)) )
+    tweets = list(q)
+    tweets_today = len(tweets)
+    # Grab a table of word -> frequency
+    word_freq = _analyse_word_freq(q)
+    hashtags = _extract_hashtags(word_freq)[:50]
+    links = _extract_links(word_freq)[:50]
+    words = _extract_words(word_freq)[:50]
+    authors = _extract_authors(q)
+    return SnapshotOfTwitter(day, tweets_today, hashtags, links, words, authors)
+
+def _analyse_word_freq(query):
+    freq = {}
+    regex = re.compile(r'[\w:/#\.]+')
+    for tweet in query:
+        text = tweet.text
+        for match in regex.finditer(tweet.text):
+            # Case insensitive frequency count
+            word = match.group(0).lower()
+            freq[word] = freq.get(word,0) + 1
+    return freq
+
+def _extract_hashtags(word_freq):
+    filtered = [ (key,value) for key,value in word_freq.items() if key[0]=='#' and value>1 ]
+    ordered = sorted(filtered, key=lambda x:x[1], reverse=True)
+    return [ {'hashtag':x[0], 'frequency':x[1]} for x in ordered ]
+
+def _extract_links(word_freq):
+    filtered = [ (key,value) for key,value in word_freq.items() if key[:5]=='http:' and value>1]
+    ordered = sorted(filtered, key=lambda x:x[1], reverse=True)
+    return [ {'link':x[0],'frequency':x[1]} for x in ordered ]
+
+def _extract_words(word_freq, min_word_length=7):
+    is_word = lambda x: len(x)>min_word_length \
+            and not x[:5]=='http:'\
+            and not x[0]=='#'
+    filtered = [ (key,value) for key,value in word_freq.items() if is_word(key) and value>1 ]
+    ordered = sorted(filtered, key=lambda x:x[1], reverse=True)
+    return [ {'word':x[0], 'frequency':x[1]} for x in ordered ]
+
+def _extract_authors(query, limit=20):
+    """Who tweeted the most?"""
+    freq = {}
+    for tweet in query:
+        author = tweet.screen_name
+        freq[author] = freq.get(author,0) + 1
+    # Grab top-ranked as tuples
+    freqlist = sorted( freq.items(), key=lambda x:x[1])
+    out = []
+    while len(freqlist)>0 and len(out)<limit:
+        x = freqlist.pop()
+        author = _get_login_for(x[0])
+        if author:
+            out.append({'screen_name':x[0], 'frequency':x[1], 'login':author})
+    return out
+
+def _get_login_for(twitter_handle):
+    q = Session.query(Person)\
+            .filter(func.lower(Person.twitter)==func.lower(twitter_handle))\
+            .first()
+    if q:
+        return q.login
+    

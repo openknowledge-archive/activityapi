@@ -45,6 +45,32 @@ class Repo(Base):
             'language' : self.language ,
         }
 
+class SnapshotOfTwitter(Base):
+    __tablename__='snapshot_twitter'
+    timestamp = Column(Date, primary_key=True) 
+    tweets_today = Column(Integer)
+    hashtags = Column(String)
+    links = Column(String)
+    words = Column(String)
+    authors = Column(String)
+    def __init__(self, timestamp, tweets_today, hashtags, links, words, authors):
+        self.timestamp = timestamp
+        self.tweets_today = tweets_today 
+        self.hashtags = json.dumps(hashtags)
+        self.links = json.dumps(links)
+        self.words = json.dumps(words)
+        self.authors = json.dumps(authors)
+    def toJson(self):
+        return {
+            'timestamp': self.timestamp,
+            'tweets_today': self.tweets_today,
+            'hashtags': json.loads(self.hashtags),
+            'links': json.loads(self.links),
+            'words': json.loads(self.words),
+            'authors': json.loads(self.authors),
+        }
+
+
 class SnapshotOfRepo(Base):
     __tablename__='snapshot_repo'
     repo_id = Column(Integer, ForeignKey('repo.id'), primary_key=True)
