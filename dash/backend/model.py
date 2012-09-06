@@ -62,7 +62,7 @@ class SnapshotOfTwitter(Base):
         self.authors = json.dumps(authors)
     def toJson(self):
         return {
-            'timestamp': self.timestamp,
+            'timestamp': self.timestamp.isoformat(),
             'tweets_today': self.tweets_today,
             'hashtags': json.loads(self.hashtags),
             'links': json.loads(self.links),

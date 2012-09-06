@@ -80,22 +80,14 @@ def data__timestamps():
 ####           URLS: /history/...
 ##################################################
 @endpoint('/history/twitter')
-def twitter_trends():
-    # TODO fixify
-    hours = 12
-    since = datetime.now() - timedelta(hours=hours)
-    q = Session.query(Tweet).filter(Tweet.timestamp >= since)
-    freq = util.freq_table( q )
-    data = {
-        'since' : since.isoformat(),
-        'since_hours' : hours,
-        'count_tweets' : q.count(),
-        'hashtags' : util.analyse(freq,hashtags=True,results=5),
-        'urls' : util.analyse(freq,links=True,results=5),
-        'words' : util.analyse(freq)
-    }
-    return data 
-
+def history__twitter():
+    response = _prepare( Session.query(SnapshotOfTwitter).count() )
+    q = Session.query(SnapshotOfTwitter)\
+            .order_by(SnapshotOfTwitter.timestamp.desc())\
+            .offset(response['offset'])\
+            .limit(response['per_page'])
+    response['data'] = [ x.toJson() for x in q ] 
+    return response
 
 ##################################################
 ####           URLS: /debug/...
