@@ -55,11 +55,11 @@ def _get_grain():
     assert grain in valid, 'Grain must be one of: %s. (Got value: "%s")' % (json.dumps(valid), grain)
     return grain
 
-def _count_group_by(group_by):
+def _count_group_by(grouping):
     """Count the number of rows a SELECT ... GROUP BY will return."""
     return engine.execute(\
-                select([group_by])\
-                    .group_by(group_by)\
+                select([grouping])\
+                    .group_by(grouping)\
                     .alias('tmp')\
                     .count()\
             )\
@@ -130,6 +130,7 @@ def history__mailman(**args):
     date_group = func.date_trunc(grain, SnapshotOfMailman.timestamp)
     # Count the results
     response = _prepare(_count_group_by(date_group))
+    # Execute the query
     stmt = select([ date_group,\
                     func.sum(SnapshotOfMailman.posts_today),\
                     func.max(SnapshotOfMailman.subscribers)])\

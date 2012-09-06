@@ -1,6 +1,5 @@
 from flask import Flask,request,make_response
 import json
-import util
 
 app = Flask('dash.frontend')
 app.config.from_object('dash.frontend.settings')
