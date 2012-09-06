@@ -128,7 +128,7 @@ class SnapshotOfMailman(Base):
         self.posts_today = posts_today
     def toJson(self):
         return {
-            'timestamp': self.timestamp,
+            'timestamp': self.timestamp.isoformat(),
             'subscribers': self.subscribers,
             'posts_today': self.posts_today,
         }

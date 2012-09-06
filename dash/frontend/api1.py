@@ -5,6 +5,7 @@ from flask import request, make_response
 from datetime import datetime,timedelta
 import json
 import functools
+from sqlalchemy import func,select
 
 ##################################################
 ####           Utilities
@@ -15,10 +16,10 @@ def endpoint(rule, **options):
     BASE='/api/1'
     def decorator(f):
         @functools.wraps(f)
-        def wrapped_fn():
+        def wrapped_fn(*args, **kwargs):
             callback = request.args.get('callback')
             try:
-                raw = f()
+                raw = f(*args, **kwargs)
             except (AssertionError, ValueError) as e:
                 if request.args.get('_debug') is not None:
                     raise e
@@ -47,6 +48,22 @@ def _prepare(total=None, per_page=10):
         response['total'] = total
         response['last_page'] = max(0,total-1) / response['per_page']
     return response
+
+def _get_grain():
+    grain = request.args.get('grain','day')
+    valid = ['day', 'week', 'month', 'quarter', 'year']
+    assert grain in valid, 'Grain must be one of: %s. (Got value: "%s")' % (json.dumps(valid), grain)
+    return grain
+
+def _count_group_by(group_by):
+    """Count the number of rows a SELECT ... GROUP BY will return."""
+    return engine.execute(\
+                select([group_by])\
+                    .group_by(group_by)\
+                    .alias('tmp')\
+                    .count()\
+            )\
+            .first()[0]
 
 ##################################################
 ####           URL: /
@@ -89,10 +106,60 @@ def history__twitter():
     response['data'] = [ x.toJson() for x in q ] 
     return response
 
+@endpoint('/history/github')
+def history__github():
+    response = _prepare( Session.query(SnapshotOfRepo).count() )
+    q = Session.query(SnapshotOfRepo)\
+            .order_by(SnapshotOfRepo.timestamp.desc())\
+            .offset(response['offset'])\
+            .limit(response['per_page'])
+    response['data'] = [ x.toJson() for x in q ] 
+    return response
+
+@endpoint('/history/mailman')
+def history__mailman_all(**args):
+    assert False, 'Combined view-all-lists not yet implemented'
+
+@endpoint('/history/mailman/<listname>')
+def history__mailman(**args):
+    mailman = Session.query(Mailman)\
+            .filter(Mailman.name==args['listname'])\
+            .first()
+    assert mailman, 'list "%s" does not exist' % args['listname']
+    grain = _get_grain()
+    date_group = func.date_trunc(grain, SnapshotOfMailman.timestamp)
+    # Count the results
+    response = _prepare(_count_group_by(date_group))
+    stmt = select([ date_group,\
+                    func.sum(SnapshotOfMailman.posts_today),\
+                    func.max(SnapshotOfMailman.subscribers)])\
+            .group_by(date_group)\
+            .where(SnapshotOfMailman.mailman_id==mailman.id)\
+            .order_by(date_group.desc())\
+            .offset(response['offset'])\
+            .limit(response['per_page'])
+    q = engine.execute(stmt)
+    # Inner function transforms SELECT tuple into recognizable format
+    _dictize = lambda x: {
+        'timestamp':x[0].date().isoformat(),
+        'posts':x[1],
+        'subscribers':x[2]
+    }
+    response['data'] = [ _dictize(x) for x in q ] 
+    response['grain'] = grain
+    response['list_id'] = mailman.id
+    response['list_name'] = mailman.name
+    response['list_link'] = mailman.link
+    response['list_description'] = mailman.description
+    return response
+    
+
+
+
+
 ##################################################
 ####           URLS: /debug/...
 ##################################################
-
 @endpoint('/debug/twitter_ratelimit')
 def debug__twitter_ratelimit():
     import dash.twitter
