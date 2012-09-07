@@ -127,15 +127,93 @@ def data__person():
 ##################################################
 ####           URLS: /activity/...
 ##################################################
+def _activityquery_github():
+    return Session.query(ActivityInGithub,Repo,Person)\
+            .order_by(ActivityInGithub.timestamp.desc())\
+            .filter(Repo.full_name==ActivityInGithub.repo)\
+            .filter(Person.id==ActivityInGithub.user_id)
+def _activitydict_github(act,repo,person):
+    out = act.toJson()
+    out['repo'] = repo.toJson()
+    out['person'] = person.toJson()
+    out['_activity_type'] = 'github'
+    return out
+
+def _activityquery_mailman():
+    return Session.query(ActivityInMailman,Mailman,Person)\
+            .order_by(ActivityInMailman.timestamp.desc())\
+            .filter(Mailman.id==ActivityInMailman.mailman_id)\
+            .filter(Person.email==ActivityInMailman.email)
+def _activitydict_mailman(act,mailman,person):
+    out = act.toJson()
+    out['mailman'] = mailman.toJson()
+    out['person'] = person.toJson()
+    out['_activity_type'] = 'mailman'
+    return out
+
+def _activityquery_buddypress():
+    return Session.query(ActivityInBuddypress,Person)\
+            .order_by(ActivityInBuddypress.timestamp.desc())\
+            .filter(Person.login==ActivityInBuddypress.login)
+def _activitydict_buddypress(act,person):
+    out = act.toJson()
+    out['person'] = person.toJson()
+    out['_activity_type'] = 'buddypress'
+    return out
+    
+def _activityquery_twitter():
+    return Session.query(Tweet,Person)\
+            .order_by(Tweet.timestamp.desc())\
+            .filter(Person.twitter==Tweet.screen_name)
+def _activitydict_twitter(act,person):
+    out = act.toJson()
+    out['person'] = person.toJson()
+    out['_activity_type'] = 'twitter'
+    return out
+    
+
 @endpoint('/activity/person')
 def activity__person():
-    # TODO
-    # Return any activity for all people
-    #   ?login=zephod,rgrp
-    #   >    Return activity for the selected users
-    #   ?type=buddypress,github,twitter,mailman
-    #   >    Return activity only of the specified types
-    pass
+    # Facet by types
+    types=['buddypress','github','twitter','mailman']
+    _types = request.args.get('type',None)
+    if _types is not None:
+        _types = _types.split(',')
+        types = list( set(types).intersection(set(_types)) )
+    # Facet by login
+    login = request.args.get('login')
+    if login is not None:
+        login = login.split(',')
+    # Pull in all activities, and sort them in Python
+    # (...can't think of a better way to do this)
+    results = []
+    if 'github' in types:
+        q = _activityquery_github()
+        if login is not None:
+            q = q.filter(Person.login.in_(login))
+        results += [ _activitydict_github(x,y,z) for x,y,z in q ]
+    if 'mailman' in types:
+        q = _activityquery_mailman()
+        if login is not None:
+            q = q.filter(Person.login.in_(login))
+        results += [ _activitydict_mailman(x,y,z) for x,y,z in q ]
+    if 'buddypress' in types:
+        q = _activityquery_buddypress()
+        if login is not None:
+            q = q.filter(Person.login.in_(login))
+        results += [ _activitydict_buddypress(x,y) for x,y in q ]
+    if 'twitter' in types:
+        q = _activityquery_twitter()
+        if login is not None:
+            q = q.filter(Person.login.in_(login))
+        results += [ _activitydict_twitter(x,y) for x,y in q ]
+
+    results = sorted(results, key = lambda x : x['timestamp'],reverse=True)
+    response = _prepare( len(results) )
+    response['type'] = types
+    response['login'] = login
+    response['data'] = results[ response['offset'] : response['offset']+response['per_page'] ]
+    return response
 
 @endpoint('/activity/twitter')
 def activity__twitter():
@@ -149,45 +227,27 @@ def activity__twitter():
 @endpoint('/activity/github')
 def activity__github():
     select_repos = request.args.get('repo',None)
-    q = Session.query(ActivityInGithub,Repo,Person)\
-            .order_by(ActivityInGithub.timestamp.desc())\
-            .filter(Repo.full_name==ActivityInGithub.repo)\
-            .filter(Person.id==ActivityInGithub.user_id)
+    q = _activityquery_github()
     if select_repos is not None:
         select_repos = [ 'okfn/'+x for x in select_repos.split(',') ]
         q = q.filter(Repo.full_name.in_(select_repos))
     response = _prepare( q.count() )
     q = q.offset(response['offset'])\
             .limit(response['per_page'])
-    def _dictize(act,repo,person):
-        out = act.toJson()
-        out['repo'] = repo.toJson()
-        out['person'] = person.toJson()
-        return out
-    response['data'] = [ _dictize(x,y,z) for x,y,z in q ]
-
+    response['data'] = [ _activitydict_github(x,y,z) for x,y,z in q ]
     return response
 
 @endpoint('/activity/mailman')
 def activity__mailman():
     select_lists = request.args.get('list',None)
-    q = Session.query(ActivityInMailman,Mailman,Person)\
-            .order_by(ActivityInMailman.timestamp.desc())\
-            .filter(Mailman.id==ActivityInMailman.mailman_id)\
-            .filter(Person.email==ActivityInMailman.email)
+    q = _activityquery_mailman()
     if select_lists is not None:
         select_lists = select_lists.split(',') 
         q = q.filter(func.lower(Mailman.name).in_(select_lists))
     response = _prepare( q.count() )
     q = q.offset(response['offset'])\
             .limit(response['per_page'])
-    def _dictize(act,mailman,person):
-        out = act.toJson()
-        out['mailman'] = mailman.toJson()
-        out['person'] = person.toJson()
-        return out
-    response['data'] = [ _dictize(x,y,z) for x,y,z in q ]
-
+    response['data'] = [ _activitydict_mailman(x,y,z) for x,y,z in q ]
     return response
 
 
