@@ -126,7 +126,7 @@ def _diff(person, data, verbose=False):
             # Don't store a diff if I update stupid fields like '_twitter' 
             if not (k[0]=='_' or k=='last_active'):
                 # I like to track changes people make to their profiles
-                diff = ActivityInBuddypress('update',person, {'attribute':k,'old_value':str(old),'new_value':str(v)})
+                diff = ActivityInBuddypress('update',person, {'attribute':k,'old_value':unicode(old),'new_value':unicode(v)})
                 Session.add(diff)
                 if verbose:
                     print diff
