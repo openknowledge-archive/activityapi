@@ -127,18 +127,70 @@ def data__person():
 ##################################################
 ####           URLS: /activity/...
 ##################################################
+@endpoint('/activity/person')
+def activity__person():
+    # TODO
+    # Return any activity for all people
+    #   ?login=zephod,rgrp
+    #   >    Return activity for the selected users
+    #   ?type=buddypress,github,twitter,mailman
+    #   >    Return activity only of the specified types
+    pass
 
-def twitter_tweets():
-    # TODO activity__twitter? or show these via activiy for a person?
-    limit = 50
-    count = Session.query(Tweet).count()
-    q = Session.query(Tweet).order_by(Tweet.tweet_id.desc()).limit(limit)
-    data = { 
-        'total': count, 
-        'limit': limit, 
-        'data': [ tweet.toJson() for tweet in q ] 
-    }
-    return data
+@endpoint('/activity/twitter')
+def activity__twitter():
+    q = Session.query(Tweet).order_by(Tweet.tweet_id.desc())
+    response = _prepare( q.count() )
+    q = q.offset(response['offset'])\
+            .limit(response['per_page'])
+    response['data'] = [ x.toJson() for x in q ]
+    return response
+
+@endpoint('/activity/github')
+def activity__github():
+    select_repos = request.args.get('repo',None)
+    q = Session.query(ActivityInGithub,Repo,Person)\
+            .order_by(ActivityInGithub.timestamp.desc())\
+            .filter(Repo.full_name==ActivityInGithub.repo)\
+            .filter(Person.id==ActivityInGithub.user_id)
+    if select_repos is not None:
+        select_repos = [ 'okfn/'+x for x in select_repos.split(',') ]
+        q = q.filter(Repo.full_name.in_(select_repos))
+    response = _prepare( q.count() )
+    q = q.offset(response['offset'])\
+            .limit(response['per_page'])
+    def _dictize(act,repo,person):
+        out = act.toJson()
+        out['repo'] = repo.toJson()
+        out['person'] = person.toJson()
+        return out
+    response['data'] = [ _dictize(x,y,z) for x,y,z in q ]
+
+    return response
+
+@endpoint('/activity/mailman')
+def activity__mailman():
+    select_lists = request.args.get('list',None)
+    q = Session.query(ActivityInMailman,Mailman,Person)\
+            .order_by(ActivityInMailman.timestamp.desc())\
+            .filter(Mailman.id==ActivityInMailman.mailman_id)\
+            .filter(Person.email==ActivityInMailman.email)
+    if select_lists is not None:
+        select_lists = select_lists.split(',') 
+        q = q.filter(func.lower(Mailman.name).in_(select_lists))
+    response = _prepare( q.count() )
+    q = q.offset(response['offset'])\
+            .limit(response['per_page'])
+    def _dictize(act,mailman,person):
+        out = act.toJson()
+        out['mailman'] = mailman.toJson()
+        out['person'] = person.toJson()
+        return out
+    response['data'] = [ _dictize(x,y,z) for x,y,z in q ]
+
+    return response
+
+
 
 ##################################################
 ####           URLS: /history/...
@@ -305,117 +357,4 @@ def debug__request():
             'form' : request.form,
             'view_args' : request.view_args,
     }
-
-
-
-
-
-
-
-# TODO sort out these old accessors...
-
-def activity_user():
-    # TODO activity__user?
-    username = request.args.get('username')
-    assert username, 'Add ?username=... to your URL'
-    user = Session.query(Person).filter(Person.login==username).first()
-    assert user, 'Username not found'
-    all_activity = bool( request.args.get('all') )
-    grouped = not bool( request.args.get('seperate') )
-    _mails = Session.query(ActivityInMailman)\
-            .filter(ActivityInMailman.email==user.email)
-    mails = [ x.toJson() for x in _mails ]
-
-    _tweets = Session.query(Tweet)\
-            .filter(Tweet.screen_name==user.twitter)
-    tweets = [ x.toJson() for x in _tweets ]
-
-    _buddypress = Session.query(ActivityInBuddypress)\
-            .filter(ActivityInBuddypress.login==user.login)
-    buddypress = [ x.toJson() for x in _buddypress ]
-
-    _github = Session.query(ActivityInGithub)\
-            .filter(ActivityInGithub.user_id==user.id)
-    github = [ x.toJson() for x in _github ]
-    # Always sort lists by timestamp
-    sortkey = lambda x : x['timestamp']
-    # Grouped mode is the default behaviour...
-    if grouped:
-        grouped = []
-        for x in mails:      x['_event_type']='mail';       grouped.append(x)
-        for x in tweets:     x['_event_type']='tweet';      grouped.append(x)
-        for x in buddypress: x['_event_type']='buddypress'; grouped.append(x)
-        for x in github:     x['_event_type']='github';     grouped.append(x)
-        grouped = sorted(grouped, key=sortkey,reverse=True)
-        if not all_activity:
-            grouped = grouped[:10]
-        return {
-            'username':user.login,
-            'display_name':user.display_name,
-            'events': grouped
-        }
-    mails = sorted(mails,key=sortkey,reverse=True)
-    tweets = sorted(tweets,key=sortkey,reverse=True)
-    buddypress = sorted(buddypress,key=sortkey,reverse=True)
-    github = sorted(github,key=sortkey,reverse=True)
-    # Trim output
-    if not all_activity:
-        mails = mails[:5]
-        buddypress = buddypress[:5]
-        tweets = tweets[:5]
-        github = github[:5]
-    return {
-            'username':user.login,
-            'display_name':user.display_name,
-            'events_tweets':tweets,
-            'events_mails':mails,
-            'events_buddypress':buddypress,
-            'events_github':github,
-            }
-
-
-def activity_staff():
-    # TODO activity__staff
-    return _anyone_activity(True)
-
-def activity_all():
-    # TODO activity__all
-    return _anyone_activity(False)
-
-def _anyone_activity(staff_only=False):
-    mails = Session.query(Person,ActivityInMailman)\
-            .filter(Person.email==ActivityInMailman.email)
-    if staff_only: mails = mails.filter(Person._opinion=='staff')
-    mails = mails.order_by(ActivityInMailman.timestamp.desc())\
-            .limit(10)
-    tweets = Session.query(Person,Tweet)\
-            .filter(Tweet.screen_name==Person.twitter)
-    if staff_only: tweets = tweets.filter(Person._opinion=='staff')
-    tweets = tweets.order_by(Tweet.timestamp.desc())\
-            .limit(10)
-    buddypress = Session.query(Person,ActivityInBuddypress)\
-            .filter(ActivityInBuddypress.login==Person.login)
-    if staff_only: buddypress = buddypress.filter(Person._opinion=='staff')
-    buddypress = buddypress.order_by(ActivityInBuddypress.timestamp.desc())\
-            .limit(10)
-    github = Session.query(Person,ActivityInGithub)\
-            .filter(ActivityInGithub.user_id==Person.id)
-    if staff_only: github = github.filter(Person._opinion=='staff')
-    github = github.order_by(ActivityInGithub.timestamp.desc())\
-            .limit(10)
-    def combine(user,obj):
-        out = obj.toJson()
-        out['login'] = user.login
-        out['display_name'] = user.display_name
-        return out
-    return {
-            'events_tweets':[ combine(u,x) for u,x in tweets ],
-            'events_mails':[ combine(u,x) for u,x in mails ],
-            'events_buddypress':[ combine(u,x) for u,x in buddypress ],
-            'events_github':[ combine(u,x) for u,x in github ],
-            }
-
-
-
-
 

@@ -273,7 +273,6 @@ class ActivityInMailman(Base):
         self.timestamp = timestamp
     def toJson(self):
         return {
-            'mailman_id'  : self.mailman_id,
             'message_id' : self.message_id,
             'subject' : self.subject,
             'author' : self.author,
@@ -301,7 +300,6 @@ class ActivityInGithub(Base):
     def toJson(self):
         return {
             'id' : self.id,
-            'user_id' : self.user_id,
             'timestamp' : self.timestamp.isoformat(),
             'type' : self.type,
             'repo' : self.repo,
