@@ -298,7 +298,7 @@ def history__github_all():
             .group_by(SnapshotOfRepo.repo_id)\
             .group_by(date_group)\
             .order_by(date_group.desc())\
-            .limit(num_repos*10)\
+            .limit(num_repos*12)\
             .alias('fromobj')
     # Hit the DB with one (quite complex) query to group by date & join on Repo
     q = Session.query(fromobj,Repo).filter(Repo.id==fromobj.c['repo_id'])
@@ -368,8 +368,39 @@ def history__github(**args):
 
 @endpoint('/history/mailman')
 def history__mailman_all(**args):
-    # TODO implement
-    assert False, 'Combined view-all-lists not yet implemented'
+    grain = _get_grain()
+    date_group = func.date_trunc(grain, SnapshotOfMailman.timestamp)
+    num_lists = Session.query(Mailman).count()
+    # Execute the query
+    fromobj = select([ date_group,\
+                    SnapshotOfMailman.mailman_id,\
+                    func.max(SnapshotOfMailman.posts_today),\
+                    func.max(SnapshotOfMailman.subscribers)])\
+            .group_by(SnapshotOfMailman.mailman_id)\
+            .group_by(date_group)\
+            .order_by(date_group.desc())\
+            .limit(num_lists*12)\
+            .alias('fromobj')
+    # Hit the DB with one (quite complex) query to group by date & join on Repo
+    q = Session.query(fromobj,Mailman).filter(Mailman.id==fromobj.c['mailman_id'])
+    results = {}
+    _dictize = lambda x: {
+        'timestamp':x[0].date().isoformat(),
+        'posts':x[2],
+        'subscribers':x[3],
+    }
+    for x in q:
+        mailman = x[4]
+        n = mailman.name
+        if not n in results:
+            results[n] = { 'mailman' : mailman.toJson(), 'data': [] }
+        # Add a history entry
+        results[n]['data'].append( _dictize(x) )
+    # Inner function transforms SELECT tuple into recognizable format
+    response = {'ok':True}
+    response['grain'] = grain
+    response['data'] = results
+    return response
 
 @endpoint('/history/mailman/<listname>')
 def history__mailman(**args):
