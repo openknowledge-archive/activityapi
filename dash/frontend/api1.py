@@ -107,17 +107,56 @@ def history__twitter():
     return response
 
 @endpoint('/history/github')
-def history__github():
-    response = _prepare( Session.query(SnapshotOfRepo).count() )
-    q = Session.query(SnapshotOfRepo)\
-            .order_by(SnapshotOfRepo.timestamp.desc())\
+def history__github_all():
+    # TODO implement
+    assert False, 'All-repo history not yet implemented.'
+
+@endpoint('/history/github/<reponame>')
+def history__github(**args):
+    repo = Session.query(Repo)\
+            .filter(Repo.full_name=='okfn/'+args['reponame'])\
+            .first()
+    assert repo, 'repository "%s" does not exist' % args['reponame']
+    grain = _get_grain()
+    date_group = func.date_trunc(grain, SnapshotOfRepo.timestamp)
+    # Count the results
+    response = _prepare(_count_group_by(date_group))
+    # Execute the query
+    stmt = select([ date_group,\
+                    func.max(SnapshotOfRepo.open_issues),\
+                    func.max(SnapshotOfRepo.size),\
+                    func.max(SnapshotOfRepo.watchers),\
+                    func.max(SnapshotOfRepo.forks)])\
+            .group_by(date_group)\
+            .where(SnapshotOfRepo.repo_id==repo.id)\
+            .order_by(date_group.desc())\
             .offset(response['offset'])\
             .limit(response['per_page'])
-    response['data'] = [ x.toJson() for x in q ] 
+    q = engine.execute(stmt)
+    # Inner function transforms SELECT tuple into recognizable format
+    _dictize = lambda x: {
+        'timestamp':x[0].date().isoformat(),
+        'open_issues':x[1],
+        'size':x[2],
+        'watchers':x[3],
+        'forks':x[4],
+    }
+    response['data'] = [ _dictize(x) for x in q ] 
+    response['grain'] = grain
+    response['repo_id'] = repo.id
+    response['repo_created_at'] = repo.created_at.isoformat()
+    response['repo_description'] = repo.description
+    response['repo_fork'] = repo.fork
+    response['repo_full_name'] = repo.full_name
+    response['repo_homepage'] = repo.homepage
+    response['repo_html_url'] = repo.html_url
+    response['repo_language'] = repo.language
     return response
+
 
 @endpoint('/history/mailman')
 def history__mailman_all(**args):
+    # TODO implement
     assert False, 'Combined view-all-lists not yet implemented'
 
 @endpoint('/history/mailman/<listname>')

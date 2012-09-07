@@ -88,7 +88,7 @@ class SnapshotOfRepo(Base):
         self.forks = forks
     def toJson(self):
         return {
-            'timestamp': self.timestamp,
+            'timestamp': self.timestamp.isoformat(),
             'open_issues': self.open_issues,
             'size': self.size,
             'watchers': self.watchers,
