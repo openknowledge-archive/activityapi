@@ -88,6 +88,32 @@ def data__timestamps():
     response['data'] = [ {'id':x.id,'now':x.now} for x in q ] 
     return response
 
+def twitter_tweets():
+    # TODO data__twitter
+    limit = 50
+    count = Session.query(Tweet).count()
+    q = Session.query(Tweet).order_by(Tweet.tweet_id.desc()).limit(limit)
+    data = { 
+        'total': count, 
+        'limit': limit, 
+        'data': [ tweet.toJson() for tweet in q ] 
+    }
+    return data
+
+def person_list():
+    # TODO data__person
+    count = Session.query(Person).count()
+    q = Session.query(Person).order_by(Person.user_id.desc())
+    opinion = request.args.get('opinion',None)
+    if opinion is not None:
+        if opinion=='': opinion = None
+        q = q.filter(Person._opinion==opinion)
+    return { 
+        'total': count, 
+        'data': [ person.toJson() for person in q ] 
+    }
+
+
 
 ##################################################
 ####           URLS: /activity/...
@@ -153,7 +179,6 @@ def history__github(**args):
     response['repo_language'] = repo.language
     return response
 
-
 @endpoint('/history/mailman')
 def history__mailman_all(**args):
     # TODO implement
@@ -192,10 +217,49 @@ def history__mailman(**args):
     response['list_link'] = mailman.link
     response['list_description'] = mailman.description
     return response
-    
 
 
+@endpoint('/history/buddypress')
+def history__buddypress(**args):
+    grain = _get_grain()
+    date_group = func.date_trunc(grain, SnapshotOfBuddypress.timestamp)
+    # Count the results
+    response = _prepare(_count_group_by(date_group))
+    # Execute the query
+    stmt = select([ date_group,\
+                    func.max(SnapshotOfBuddypress.num_users)])\
+            .group_by(date_group)\
+            .order_by(date_group.desc())\
+            .offset(response['offset'])\
+            .limit(response['per_page'])
+    q = engine.execute(stmt)
+    # Inner function transforms SELECT tuple into recognizable format
+    _dictize = lambda x: {
+        'timestamp':x[0].date().isoformat(),
+        'num_users':x[1],
+    }
+    response['data'] = [ _dictize(x) for x in q ] 
+    response['grain'] = grain
+    return response
 
+
+##################################################
+####           URLS: /write/...
+##################################################
+def person_set_opinion():
+    # TODO (securely) write__person
+    login = request.values.get('login')
+    opinion = request.values.get('opinion')
+    assert login 
+    assert opinion
+    q = Session.query(Person).filter(Person.login==login).update({Person._opinion:opinion})
+    Session.commit()
+    return {
+        'ok': q>0,
+        'login': login,
+        'opinion': opinion,
+        'updated':q
+    }
 
 ##################################################
 ####           URLS: /debug/...
@@ -222,59 +286,79 @@ def debug__request():
     }
 
 
-def twitter_tweets():
-    limit = 50
-    count = Session.query(Tweet).count()
-    q = Session.query(Tweet).order_by(Tweet.tweet_id.desc()).limit(limit)
-    data = { 
-        'total': count, 
-        'limit': limit, 
-        'data': [ tweet.toJson() for tweet in q ] 
-    }
-    return data
 
 
-def trends_registered():
-    since_days = 365
-    now = datetime.now().date() 
-    pointer = now - timedelta(days=since_days)
-    # Rolling count of how many registered users there were
-    num_people = Session.query(Person).filter(Person.registered<pointer).count()
-    data = []
-    q = Session.query(Person)\
-            .filter(Person.registered>=pointer)\
-            .order_by(Person.registered.desc()) 
-    people = list(q)
-    while pointer<now:
-        names = []
-        while people and people[-1].registered.date()<=pointer:
-            names.append( people.pop().login )
-        num_people += len(names)
-        data.append({
-            'date': pointer.isoformat(),
-            'num_people':num_people,
-            'new_users':names
-        })
-        pointer += timedelta(days=1)
-    return {
-        'total_users': num_people,
-        'num_days': since_days,
-        'history' : data
-        }
+
+
+
+# TODO sort out these old accessors...
 
 def activity_user():
+    # TODO activity__user?
     username = request.args.get('username')
     assert username, 'Add ?username=... to your URL'
     user = Session.query(Person).filter(Person.login==username).first()
     assert user, 'Username not found'
     all_activity = bool( request.args.get('all') )
     grouped = not bool( request.args.get('seperate') )
-    return _user_activity(user,grouped,all_activity)
+    _mails = Session.query(ActivityInMailman)\
+            .filter(ActivityInMailman.email==user.email)
+    mails = [ x.toJson() for x in _mails ]
+
+    _tweets = Session.query(Tweet)\
+            .filter(Tweet.screen_name==user.twitter)
+    tweets = [ x.toJson() for x in _tweets ]
+
+    _buddypress = Session.query(ActivityInBuddypress)\
+            .filter(ActivityInBuddypress.login==user.login)
+    buddypress = [ x.toJson() for x in _buddypress ]
+
+    _github = Session.query(ActivityInGithub)\
+            .filter(ActivityInGithub.user_id==user.id)
+    github = [ x.toJson() for x in _github ]
+    # Always sort lists by timestamp
+    sortkey = lambda x : x['timestamp']
+    # Grouped mode is the default behaviour...
+    if grouped:
+        grouped = []
+        for x in mails:      x['_event_type']='mail';       grouped.append(x)
+        for x in tweets:     x['_event_type']='tweet';      grouped.append(x)
+        for x in buddypress: x['_event_type']='buddypress'; grouped.append(x)
+        for x in github:     x['_event_type']='github';     grouped.append(x)
+        grouped = sorted(grouped, key=sortkey,reverse=True)
+        if not all_activity:
+            grouped = grouped[:10]
+        return {
+            'username':user.login,
+            'display_name':user.display_name,
+            'events': grouped
+        }
+    mails = sorted(mails,key=sortkey,reverse=True)
+    tweets = sorted(tweets,key=sortkey,reverse=True)
+    buddypress = sorted(buddypress,key=sortkey,reverse=True)
+    github = sorted(github,key=sortkey,reverse=True)
+    # Trim output
+    if not all_activity:
+        mails = mails[:5]
+        buddypress = buddypress[:5]
+        tweets = tweets[:5]
+        github = github[:5]
+    return {
+            'username':user.login,
+            'display_name':user.display_name,
+            'events_tweets':tweets,
+            'events_mails':mails,
+            'events_buddypress':buddypress,
+            'events_github':github,
+            }
+
 
 def activity_staff():
+    # TODO activity__staff
     return _anyone_activity(True)
 
 def activity_all():
+    # TODO activity__all
     return _anyone_activity(False)
 
 def _anyone_activity(staff_only=False):
@@ -311,84 +395,6 @@ def _anyone_activity(staff_only=False):
             }
 
 
-def _user_activity(user,grouped,all_activity):
-    _mails = Session.query(ActivityInMailman)\
-            .filter(ActivityInMailman.email==user.email)
-    mails = [ x.toJson() for x in _mails ]
-
-    _tweets = Session.query(Tweet)\
-            .filter(Tweet.screen_name==user.twitter)
-    tweets = [ x.toJson() for x in _tweets ]
-
-    _buddypress = Session.query(ActivityInBuddypress)\
-            .filter(ActivityInBuddypress.login==user.login)
-    buddypress = [ x.toJson() for x in _buddypress ]
-
-    _github = Session.query(ActivityInGithub)\
-            .filter(ActivityInGithub.user_id==user.id)
-    github = [ x.toJson() for x in _github ]
-    # Always sort lists by timestamp
-    sortkey = lambda x : x['timestamp']
-    # Grouped mode is the default behaviour...
-    if grouped:
-        grouped = []
-        for x in mails:      x['_event_type']='mail';       grouped.append(x)
-        for x in tweets:     x['_event_type']='tweet';      grouped.append(x)
-        for x in buddypress: x['_event_type']='buddypress'; grouped.append(x)
-        for x in github:     x['_event_type']='github';     grouped.append(x)
-        grouped = sorted(grouped, key=sortkey,reverse=True)
-        if not all_activity:
-            grouped = grouped[:10]
-        return {
-            'username':user.login,
-            'display_name':user.display_name,
-            'events': grouped
-        }
-
-    mails = sorted(mails,key=sortkey,reverse=True)
-    tweets = sorted(tweets,key=sortkey,reverse=True)
-    buddypress = sorted(buddypress,key=sortkey,reverse=True)
-    github = sorted(github,key=sortkey,reverse=True)
-    # Trim output
-    if not all_activity:
-        mails = mails[:5]
-        buddypress = buddypress[:5]
-        tweets = tweets[:5]
-        github = github[:5]
-    return {
-            'username':user.login,
-            'display_name':user.display_name,
-            'events_tweets':tweets,
-            'events_mails':mails,
-            'events_buddypress':buddypress,
-            'events_github':github,
-            }
 
 
 
-
-def person_list():
-    count = Session.query(Person).count()
-    q = Session.query(Person).order_by(Person.user_id.desc())
-    opinion = request.args.get('opinion',None)
-    if opinion is not None:
-        if opinion=='': opinion = None
-        q = q.filter(Person._opinion==opinion)
-    return { 
-        'total': count, 
-        'data': [ person.toJson() for person in q ] 
-    }
-
-def person_set_opinion():
-    login = request.values.get('login')
-    opinion = request.values.get('opinion')
-    assert login 
-    assert opinion
-    q = Session.query(Person).filter(Person.login==login).update({Person._opinion:opinion})
-    Session.commit()
-    return {
-        'ok': q>0,
-        'login': login,
-        'opinion': opinion,
-        'updated':q
-    }

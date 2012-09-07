@@ -1,9 +1,10 @@
-from dash.backend import Session, model
+from dash.backend import Session
+from dash.backend.model import Person, ActivityInBuddypress, SnapshotOfBuddypress
 import string
 import re
 import json
 import requests
-from datetime import datetime
+from datetime import datetime,timedelta
 
 
 def scrape_users( url , payload=None, verbose=False):
@@ -16,13 +17,13 @@ def scrape_users( url , payload=None, verbose=False):
 
 def save_users( usermap, verbose=False ):
     addme = set(usermap.keys())
-    for existing in Session.query(model.Person):
+    for existing in Session.query(Person):
         user_id = existing.user_id
         if user_id in usermap:
             _diff(existing, usermap[user_id], verbose)
             addme.remove( user_id )
         else:
-            diff = model.ActivityInBuddypress('delete',existing)
+            diff = ActivityInBuddypress('delete',existing)
             Session.add(diff)
             if verbose:
                 print diff
@@ -30,12 +31,38 @@ def save_users( usermap, verbose=False ):
     for x in addme:
         user = usermap[x]
         user['registered'] = _parse_date(user['registered'])
-        person = model.Person.parse(user)
+        person = Person.parse(user)
         Session.add(person)
-        diff = model.ActivityInBuddypress('add',person)
+        diff = ActivityInBuddypress('add',person)
         Session.add(diff)
         if verbose:
             print diff
+    Session.commit()
+
+## Daily stats
+
+def snapshot_buddypress(verbose=False):
+    """Create SnapshotOfBuddypress objects in the database for 
+       every day since the last time this was run."""
+    today = datetime.now().date()
+    until = today - timedelta(days=1)
+    # By default, gather 1 day of snapshots
+    since = until - timedelta(days=1)
+    # Move 'since' forward if snapshots exist
+    latest = Session.query(SnapshotOfBuddypress)\
+            .order_by(SnapshotOfBuddypress.timestamp.desc())\
+            .first()
+    if latest:
+        if latest.timestamp>=until:
+            if verbose: print ' -> most recent snapshots have already been processed.'
+            return
+        since = latest.timestamp + timedelta(days=1)
+    num_users = Session.query(Person).count()
+    while since <= until:
+        snapshot = SnapshotOfBuddypress(since, num_users)
+        if verbose: print '  -> ',snapshot.toJson()
+        Session.add(snapshot)
+        since += timedelta(days=1)
     Session.commit()
 
 
@@ -99,7 +126,7 @@ def _diff(person, data, verbose=False):
             # Don't store a diff if I update stupid fields like '_twitter' 
             if not (k[0]=='_' or k=='last_active'):
                 # I like to track changes people make to their profiles
-                diff = model.ActivityInBuddypress('update',person, {'attribute':k,'old_value':str(old),'new_value':str(v)})
+                diff = ActivityInBuddypress('update',person, {'attribute':k,'old_value':str(old),'new_value':str(v)})
                 Session.add(diff)
                 if verbose:
                     print diff

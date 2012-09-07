@@ -134,6 +134,20 @@ class SnapshotOfMailman(Base):
         }
 
 
+class SnapshotOfBuddypress(Base):
+    __tablename__='snapshot_buddypress'
+    timestamp = Column(Date, primary_key=True) 
+    num_users = Column(Integer)
+    def __init__(self, timestamp, num_users):
+        self.timestamp = timestamp
+        self.num_users = num_users
+    def toJson(self):
+        return {
+            'timestamp': self.timestamp.isoformat(),
+            'num_users': self.num_users
+        }
+
+
 class Tweet(Base):
     __tablename__='activity_twitter'
     id = Column(Integer, primary_key=True)
