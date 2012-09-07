@@ -21,7 +21,7 @@
         <div class="accordion">
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row1" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/
+                <u>/api/1/</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row1"><div class="accordion-inner">
                     Check the health of the API
@@ -32,31 +32,61 @@
         <div class="accordion">
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row17" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/stream
+                <u>/api/1/stream</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row17"><div class="accordion-inner">
-                    Body
+Body
+                        <pre style="font-size: 10px;">
+Optional Parameters
+-------------------
+type       Comma seperated activity types
+           default: buddypress,twitter,github,mailman
+login      Comma seperated user logins
+           eg. zephod,rgrp
+opinion    eg. staff
+
+Optional History Parameters
+---------------------------
+hours      Number of hours of history per page
+           default: 4 hours
+days       Number of days of history per page
+           default: 4 hours!
+page       Step backwards through time 
+           (no per_page or last_page is known) </pre>
                 </div></div>
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row2" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/activity/github
+                    <span class="label label-info pull-right">Paginated</span>
+                    <u>/api/1/activity/github</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row2"><div class="accordion-inner">
-                    Body
+Body
+                        <pre style="font-size: 10px;">
+Optional Parameters
+-------------------
+repo    Comma seperated names of repositories to select
+        eg: ckanext-harvest,ckanext-dgu</pre>
                 </div></div>
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row3" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/activity/mailman
+                <span class="label label-info pull-right">Paginated</span>
+                <u>/api/1/activity/mailman</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row3"><div class="accordion-inner">
-                    Body
+Body
+                        <pre style="font-size: 10px;">
+Optional Parameters
+-------------------
+list   Comma seperated names of mailman lists to select
+       eg: ckan-dev,ckan-discuss</pre>
                 </div></div>
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row4" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/activity/twitter
+                <span class="label label-info pull-right">Paginated</span>
+                <u>/api/1/activity/twitter</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row4"><div class="accordion-inner">
                     Body
@@ -67,7 +97,7 @@
         <div class="accordion">
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row5" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/data/github
+                <u>/api/1/data/github</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row5"><div class="accordion-inner">
                     Body
@@ -75,7 +105,7 @@
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row6" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/data/mailman
+                <u>/api/1/data/mailman</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row6"><div class="accordion-inner">
                     Body
@@ -83,15 +113,22 @@
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row7" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/data/person
+                <span class="label label-info pull-right">Paginated</span>
+                <u>/api/1/data/person</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row7"><div class="accordion-inner">
-                    Body
+Body
+                        <pre style="font-size: 10px;">
+Optional Parameters
+-------------------
+opinion   Filter by opinion label in database
+          eg. 'staff'</pre>
                 </div></div>
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row8" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/data/timestamp
+                <span class="label label-info pull-right">Paginated</span>
+                <u>/api/1/data/timestamp</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row8"><div class="accordion-inner">
                     Body
@@ -102,31 +139,37 @@
         <div class="accordion">
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row12" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/history/github
+                <span class="label label-important pull-right">Granular</span>
+                <u>/api/1/history/github</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row12"><div class="accordion-inner">
                     Body
                 </div></div>
             </div>
             <div class="accordion-group">
-                <div class="accordion-heading"><a href="#row13" class="accordion-toggle" data-toggle="collapse">
-                        /api/1/history/github/<span class="url-opt">&lt;repo_name&gt;</span>
-            </a></div>
-                <div class="accordion-body collapse" id="row13"><div class="accordion-inner">
-                    Body
-                </div></div>
-            </div>
-            <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row14" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/history/mailman
+                <span class="label label-important pull-right">Granular</span>
+                <u>/api/1/history/mailman</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row14"><div class="accordion-inner">
                     Body
                 </div></div>
             </div>
             <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row13" class="accordion-toggle" data-toggle="collapse">
+                <span class="label label-info pull-right">Paginated</span>
+                <span class="label label-important pull-right">Granular</span>
+                <u>/api/1/history/github/<span class="url-opt">&lt;repo_name&gt;</span></u>
+            </a></div>
+                <div class="accordion-body collapse" id="row13"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row15" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/history/mailman/<span class="url-opt">&lt;list_name&gt;</span>
+                <span class="label label-info pull-right">Paginated</span>
+                <span class="label label-important pull-right">Granular</span>
+                <u>/api/1/history/mailman/<span class="url-opt">&lt;list_name&gt;</span></u>
                 </a></div>
                 <div class="accordion-body collapse" id="row15"><div class="accordion-inner">
                     Body
@@ -134,7 +177,9 @@
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row11" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/history/buddypress
+                <span class="label label-info pull-right">Paginated</span>
+                <span class="label label-important pull-right">Granular</span>
+                <u>/api/1/history/buddypress</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row11"><div class="accordion-inner">
                     Body
@@ -142,7 +187,8 @@
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row16" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/history/twitter
+                <span class="label label-info pull-right">Paginated</span>
+                <u>/api/1/history/twitter</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row16"><div class="accordion-inner">
                     Body
@@ -153,7 +199,7 @@
         <div class="accordion">
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row9" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/debug/request
+                <u>/api/1/debug/request</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row9"><div class="accordion-inner">
                     Body
@@ -161,7 +207,7 @@
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row10" class="accordion-toggle" data-toggle="collapse">
-                    /api/1/debug/twitter_ratelimit
+                <u>/api/1/debug/twitter_ratelimit</u>
                 </a></div>
                 <div class="accordion-body collapse" id="row10"><div class="accordion-inner">
                     Body

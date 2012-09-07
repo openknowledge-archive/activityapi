@@ -24,7 +24,6 @@ dd {
 .params td {
     border-top: none;
 }
-.accordion-heading,
 u {
     /* Hijacked this tag */
     font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
@@ -37,6 +36,12 @@ u {
 .url-opt {
     font-style: italic;
 }
-.accordion-body {
-    padding-left: 20px;
+.accordion-inner {
+    padding-left: 30px;
+}
+.label.pull-right {
+    margin-left: 2px;
+}
+.accordion-inner pre {
+    margin-top: 4px;
 }
