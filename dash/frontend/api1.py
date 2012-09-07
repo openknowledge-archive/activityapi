@@ -6,6 +6,7 @@ from datetime import datetime,timedelta
 import json
 import functools
 from sqlalchemy import func,select
+from urllib import urlencode
 
 ##################################################
 ####           Utilities
@@ -39,9 +40,6 @@ def _prepare(total=None, per_page=10):
     """Prepare a response object based off the incoming args (assume pagination)"""
     response = {}
     response['ok'] = True
-    if per_page<0:
-        # Unpaginated mode
-        return response
     response['page'] = int(request.args.get('page',0))
     response['per_page'] = int(request.args.get('per_page',per_page))
     response['offset'] = response['per_page'] * response['page']
@@ -94,7 +92,7 @@ def data__timestamp():
 @endpoint('/data/github')
 def data__github():
     """Unpaginated -- there are less than 200 entries in the database"""
-    response = _prepare(per_page=-1)
+    response = {'ok' : True}
     q = Session.query(Repo).order_by(Repo.full_name)
     response['data'] = [ x.toJson() for x in q ]
     response['total'] = q.count()
@@ -103,7 +101,7 @@ def data__github():
 @endpoint('/data/mailman')
 def data__mailman():
     """Unpaginated -- there are less than 200 entries in the database"""
-    response = _prepare(per_page=-1)
+    response = {'ok' : True}
     q = Session.query(Mailman).order_by(Mailman.name)
     response['data'] = [ x.toJson() for x in q ]
     response['total'] = q.count()
@@ -172,49 +170,6 @@ def _activitydict_twitter(act,person):
     return out
     
 
-@endpoint('/activity/person')
-def activity__person():
-    # Facet by types
-    types=['buddypress','github','twitter','mailman']
-    _types = request.args.get('type',None)
-    if _types is not None:
-        _types = _types.split(',')
-        types = list( set(types).intersection(set(_types)) )
-    # Facet by login
-    login = request.args.get('login')
-    if login is not None:
-        login = login.split(',')
-    # Pull in all activities, and sort them in Python
-    # (...can't think of a better way to do this)
-    results = []
-    if 'github' in types:
-        q = _activityquery_github()
-        if login is not None:
-            q = q.filter(Person.login.in_(login))
-        results += [ _activitydict_github(x,y,z) for x,y,z in q ]
-    if 'mailman' in types:
-        q = _activityquery_mailman()
-        if login is not None:
-            q = q.filter(Person.login.in_(login))
-        results += [ _activitydict_mailman(x,y,z) for x,y,z in q ]
-    if 'buddypress' in types:
-        q = _activityquery_buddypress()
-        if login is not None:
-            q = q.filter(Person.login.in_(login))
-        results += [ _activitydict_buddypress(x,y) for x,y in q ]
-    if 'twitter' in types:
-        q = _activityquery_twitter()
-        if login is not None:
-            q = q.filter(Person.login.in_(login))
-        results += [ _activitydict_twitter(x,y) for x,y in q ]
-
-    results = sorted(results, key = lambda x : x['timestamp'],reverse=True)
-    response = _prepare( len(results) )
-    response['type'] = types
-    response['login'] = login
-    response['data'] = results[ response['offset'] : response['offset']+response['per_page'] ]
-    return response
-
 @endpoint('/activity/twitter')
 def activity__twitter():
     q = _activityquery_twitter()
@@ -253,6 +208,69 @@ def activity__mailman():
 
 
 ##################################################
+####           URL: /stream/
+##################################################
+@endpoint('/stream')
+def stream():
+    # Facet by types
+    types=['buddypress','github','twitter','mailman']
+    _types = request.args.get('type',None)
+    if _types is not None:
+        _types = _types.split(',')
+        types = list( set(types).intersection(set(_types)) )
+    # Facet by login
+    _login = request.args.get('login')
+    filter_login = None
+    if _login is not None:
+        _login = _login.split(',')
+        filter_login = Person.login.in_(_login)
+    # Facet by opinion
+    _opinion = request.args.get('opinion')
+    filter_opinion = None
+    if _opinion is not None:
+        filter_opinion = Person._opinion==_opinion
+    # Facet by timestamp range
+    hours = int(request.args.get('hours', 0))
+    days = int(request.args.get('days',0))
+    if not days or hours:
+        hours = 4
+    # Page number 
+    page = int(request.args.get('page',0))
+    d = timedelta(hours=hours,days=days)
+    timestamp_min = datetime.now() - d * (page+1)
+    timestamp_max = timestamp_min + d
+    filter_timestamp = lambda x: x.timestamp.between( timestamp_min, timestamp_max )
+    results = []
+    if 'github' in types:
+        q = _activityquery_github().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(ActivityInGithub) )
+        results += [ _activitydict_github(x,y,z) for x,y,z in q ]
+    if 'mailman' in types:
+        q = _activityquery_mailman().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(ActivityInMailman) )
+        results += [ _activitydict_mailman(x,y,z) for x,y,z in q ]
+    if 'buddypress' in types:
+        q = _activityquery_buddypress().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(ActivityInBuddypress) )
+        results += [ _activitydict_buddypress(x,y) for x,y in q ]
+    if 'twitter' in types:
+        q = _activityquery_twitter().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(Tweet) )
+        results += [ _activitydict_twitter(x,y) for x,y in q ]
+    results = sorted(results, key = lambda x : x['timestamp'],reverse=True)
+    # Construct a results object 
+    response = { 'ok': True }
+    response['hours'] = hours
+    response['days'] = days
+    response['timestamp_min'] = timestamp_min.isoformat()
+    response['timestamp_max'] = timestamp_max.isoformat()
+    response['type'] = types
+    response['page'] = page
+    response['login'] = _login
+    response['opinion'] = _opinion
+    response['data'] = results
+    next_args = dict(request.args.items() + [('page',page+1)])
+    response['next'] = request.base_url + '?'+urlencode(next_args)
+    return response
+
+
+##################################################
 ####           URLS: /history/...
 ##################################################
 @endpoint('/history/twitter')
@@ -267,8 +285,44 @@ def history__twitter():
 
 @endpoint('/history/github')
 def history__github_all():
-    # TODO implement
-    assert False, 'All-repo history not yet implemented.'
+    grain = _get_grain()
+    date_group = func.date_trunc(grain, SnapshotOfRepo.timestamp)
+    num_repos = Session.query(Repo).count()
+    # Execute the query
+    fromobj = select([ date_group,\
+                    SnapshotOfRepo.repo_id,\
+                    func.max(SnapshotOfRepo.open_issues),\
+                    func.max(SnapshotOfRepo.size),\
+                    func.max(SnapshotOfRepo.watchers),\
+                    func.max(SnapshotOfRepo.forks)])\
+            .group_by(SnapshotOfRepo.repo_id)\
+            .group_by(date_group)\
+            .order_by(date_group.desc())\
+            .limit(num_repos*10)\
+            .alias('fromobj')
+    # Hit the DB with one (quite complex) query to group by date & join on Repo
+    q = Session.query(fromobj,Repo).filter(Repo.id==fromobj.c['repo_id'])
+    results = {}
+    _dictize = lambda x: {
+        'timestamp':x[0].date().isoformat(),
+        'open_issues':x[2],
+        'size':x[3],
+        'watchers':x[4],
+        'forks':x[5],
+    }
+    for x in q:
+        repo = x[6]
+        n = repo.full_name
+        if not n in results:
+            results[n] = { 'repo' : repo.toJson(), 'data': [] }
+        # Add a history entry
+        results[n]['data'].append( _dictize(x) )
+    # Inner function transforms SELECT tuple into recognizable format
+    response = {'ok':True}
+    response['grain'] = grain
+    response['data'] = results
+    return response
+
 
 @endpoint('/history/github/<reponame>')
 def history__github(**args):
