@@ -45,3 +45,6 @@ u {
 .accordion-inner pre {
     margin-top: 4px;
 }
+pre .label {
+    font-family: Helvetica Neue;
+}

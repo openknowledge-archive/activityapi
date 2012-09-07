@@ -14,9 +14,27 @@
           <h1>OKFN Activity API</h1>
         </header>
         <br/>
-        <h4>Version 1 Reference&nbsp;&nbsp; <small class="pull-right">All endpoints are served in JSON format.</small></h4>
-        <h4 class="clearfix"><small class="pull-right">An optional <u>?callback=</u> parameter triggers JSONP format.</small></h4>
+        All endpoints are served in JSON format.
+<hr/>
+        <h3>Optional Parameters</h3>
+        <pre style="font-size: 10px">
+callback   Triggers JSONP format.</pre>
+<pre style="font-size: 10px">
+<span style="font-weight: bold;">Endpoints with <span class="label label-info">Paginated</span> accept the following:</span>
+page       Page number. Use the resulting <b>last_page</b> value
+           to provide pagination through items.
+           Default: 0
+           Note: ?page=2 will jump to the third page!
+per-page   Number of items to be returned per API call.
+           Default: 10</pre>
+<pre style="font-size: 10px">
+<span style="font-weight: bold;">Endpoints with <span class="label label-important">Granular</span> accept the following:</span>
+grain      Time period to group results by.
+           Valid: day, week, month, quarter, year
+           Default: day
+eg: <b>?grain=day</b> returns 7 times as many results as <b>?grain=week</b>.</pre>
         <hr/>
+        <h3>Version 1 Reference</h3><br/>
         <h4>Intro</h4>
         <div class="accordion">
             <div class="accordion-group">
@@ -37,21 +55,20 @@
                 <div class="accordion-body collapse" id="row17"><div class="accordion-inner">
 Body
                         <pre style="font-size: 10px;">
-Optional Parameters
--------------------
-type       Comma seperated activity types
+<b>Optional Parameters</b>
+type       Comma seperated activity types.
            default: buddypress,twitter,github,mailman
-login      Comma seperated user logins
+login      Comma seperated user logins.
            eg. zephod,rgrp
-opinion    eg. staff
+opinion    Filter by the database <b>opinion</b> label.
+           eg. staff
 
-Optional History Parameters
----------------------------
-hours      Number of hours of history per page
+<b>Optional History Parameters</b>
+hours      Number of hours of history per page.
            default: 4 hours
-days       Number of days of history per page
+days       Number of days of history per page.
            default: 4 hours!
-page       Step backwards through time 
+page       Step backwards through time.
            (no per_page or last_page is known) </pre>
                 </div></div>
             </div>
@@ -63,9 +80,8 @@ page       Step backwards through time
                 <div class="accordion-body collapse" id="row2"><div class="accordion-inner">
 Body
                         <pre style="font-size: 10px;">
-Optional Parameters
--------------------
-repo    Comma seperated names of repositories to select
+<b>Optional Parameters</b>
+repo    Comma seperated names of repositories.
         eg: ckanext-harvest,ckanext-dgu</pre>
                 </div></div>
             </div>
@@ -77,10 +93,9 @@ repo    Comma seperated names of repositories to select
                 <div class="accordion-body collapse" id="row3"><div class="accordion-inner">
 Body
                         <pre style="font-size: 10px;">
-Optional Parameters
--------------------
-list   Comma seperated names of mailman lists to select
-       eg: ckan-dev,ckan-discuss</pre>
+<b>Optional Parameters</b>
+list    Comma seperated names of mailman lists.
+        eg: ckan-dev,ckan-discuss</pre>
                 </div></div>
             </div>
             <div class="accordion-group">
@@ -119,9 +134,8 @@ list   Comma seperated names of mailman lists to select
                 <div class="accordion-body collapse" id="row7"><div class="accordion-inner">
 Body
                         <pre style="font-size: 10px;">
-Optional Parameters
--------------------
-opinion   Filter by opinion label in database
+<b>Optional Parameters</b>
+opinion   Filter by opinion label in database.
           eg. 'staff'</pre>
                 </div></div>
             </div>
