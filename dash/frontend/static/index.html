@@ -4,6 +4,8 @@
     <title>OKFN: Activity API</title>
     <link rel="stylesheet" type="text/css" href="static/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="static/style.css" />
+    <script src="http://code.jquery.com/jquery-1.8.1.min.js"></script>
+    <script src="static/bootstrap.min.js"></script>
   </head>
   <body>
     <div class="container">
@@ -12,48 +14,161 @@
           <h1>OKFN Activity API</h1>
         </header>
         <br/>
-        <h4>Version 1 Endpoints&nbsp;&nbsp; <small class="pull-right">All endpoints are served in JSON format.</small></h4>
+        <h4>Version 1 Reference&nbsp;&nbsp; <small class="pull-right">All endpoints are served in JSON format.</small></h4>
         <h4 class="clearfix"><small class="pull-right">An optional <u>?callback=</u> parameter triggers JSONP format.</small></h4>
-        <dl>
-          <dt><a href="/api/1/">/api/1/</a></dt>
-          <dd>Check the health of the API.</dd>
-        </dl>
         <hr/>
-        <dl>
-          <dt><a href="/api/1/person/list">/api/1/person/list</a></dt>
-          <dd>List people from the <a href="http://okfn.org">okfn.org</a> BuddyPress database.
-          <table class="params table table-condensed">
-              <thead><th colspan="2">Optional Parameters:</th></thead>
-              <tbody>
-                  <tr><td><code>opinion</code></td><td>Filter by database's <u>_opinion</u> field.<br/>"<u>spammer</u>", "<u>staff</u>" etc.</td>
-              </tbody>
-          </table></dd>
-          <dt style="display:none;"><a href="/api/1/person/set_opinion">/api/1/person/set_opinion</a></dt>
-          <dd style="display:none;"><b>POST</b>-endpoint. Set the <u>_opinion</u> field on a user.
-          <table class="params table table-condensed">
-              <thead><th colspan="2">Required Parameters:</th></thead>
-              <tbody>
-                  <tr><td><code>opinion</code></td><td>(String) Value of <u>_opinion</u> to write.</td></tr>
-                  <tr><td><code>login</code></td><td>(String) User's <u>login</u> to assign it to.</td></tr>
-              </tbody>
-          </table></dd>
-        </dl>
-        <hr/>
-        <dl>
-          <dt><a href="/api/1/twitter/tweets">/api/1/twitter/tweets</a></dt>
-          <dd>Twitter "firehose" of tweets from community members.</dd>
-          <dt><a href="/api/1/twitter/trends">/api/1/twitter/trends</a></dt>
-          <dd>See most-talked-about #hashtag, links, and commonly used words from the last 12 hours.</dd>
-          <dt><a href="/api/1/twitter/ratelimit">/api/1/twitter/ratelimit</a></dt>
-          <dd>How many more Twitter API calls can the server make this hour?</dd>
-        </dl>
-        <hr/>
-        <dl>
-          <dt><a href="/api/1/debug/request">/api/1/debug/request</a></dt>
-          <dd>(for debug): Reflect the request you have GET/POST-ed to the server.</dd>
-          <dt><a href="/api/1/debug/timestamps">/api/1/debug/timestamps</a></dt>
-          <dd>(for debug): Timestamps updated once per ten minutes in a regular cron job.</dd>
-        </dl>
+        <h4>Intro</h4>
+        <div class="accordion">
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row1" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/
+                </a></div>
+                <div class="accordion-body collapse" id="row1"><div class="accordion-inner">
+                    Check the health of the API
+                </div></div>
+            </div>
+        </div>
+        <h4>Activity</h4>
+        <div class="accordion">
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row17" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/stream
+                </a></div>
+                <div class="accordion-body collapse" id="row17"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row2" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/activity/github
+                </a></div>
+                <div class="accordion-body collapse" id="row2"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row3" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/activity/mailman
+                </a></div>
+                <div class="accordion-body collapse" id="row3"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row4" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/activity/twitter
+                </a></div>
+                <div class="accordion-body collapse" id="row4"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+        </div>
+        <h4>Data</h4>
+        <div class="accordion">
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row5" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/data/github
+                </a></div>
+                <div class="accordion-body collapse" id="row5"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row6" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/data/mailman
+                </a></div>
+                <div class="accordion-body collapse" id="row6"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row7" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/data/person
+                </a></div>
+                <div class="accordion-body collapse" id="row7"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row8" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/data/timestamp
+                </a></div>
+                <div class="accordion-body collapse" id="row8"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+        </div>
+        <h4>History Analytics</h4>
+        <div class="accordion">
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row12" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/history/github
+                </a></div>
+                <div class="accordion-body collapse" id="row12"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row13" class="accordion-toggle" data-toggle="collapse">
+                        /api/1/history/github/<span class="url-opt">&lt;repo_name&gt;</span>
+            </a></div>
+                <div class="accordion-body collapse" id="row13"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row14" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/history/mailman
+                </a></div>
+                <div class="accordion-body collapse" id="row14"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row15" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/history/mailman/<span class="url-opt">&lt;list_name&gt;</span>
+                </a></div>
+                <div class="accordion-body collapse" id="row15"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row11" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/history/buddypress
+                </a></div>
+                <div class="accordion-body collapse" id="row11"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row16" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/history/twitter
+                </a></div>
+                <div class="accordion-body collapse" id="row16"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+        </div>
+        <h4>Debug</h4>
+        <div class="accordion">
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row9" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/debug/request
+                </a></div>
+                <div class="accordion-body collapse" id="row9"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+            <div class="accordion-group">
+                <div class="accordion-heading"><a href="#row10" class="accordion-toggle" data-toggle="collapse">
+                    /api/1/debug/twitter_ratelimit
+                </a></div>
+                <div class="accordion-body collapse" id="row10"><div class="accordion-inner">
+                    Body
+                </div></div>
+            </div>
+        </div>
+
         <footer>
           <p>The Activity API runs on <a href="http://www.heroku.com/">Heroku</a> cloud servers.</p>
           <p>Its architecture consists of a front-end dyno running a <a href="http://flask.pocoo.org/">Flask</a> webserver, with multiple scheduled worker threads maintaining a <a href="http://www.postgresql.org/">PostgreSQL</a> database.</p>

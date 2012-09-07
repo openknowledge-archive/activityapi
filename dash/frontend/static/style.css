@@ -24,9 +24,19 @@ dd {
 .params td {
     border-top: none;
 }
+.accordion-heading,
 u {
     /* Hijacked this tag */
     font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
     font-size: 12px;
     text-decoration: none;
+}
+.accordion {
+    margin-top: 5px;
+}
+.url-opt {
+    font-style: italic;
+}
+.accordion-body {
+    padding-left: 20px;
 }
