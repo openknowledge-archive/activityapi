@@ -36,7 +36,7 @@ class Repo(Base):
         self.language = repo.language
     def toJson(self):
         return {
-            'created_at' : self.created_at ,
+            'created_at' : self.created_at.isoformat() ,
             'description' : self.description ,
             'fork' : self.fork ,
             'full_name' : self.full_name ,

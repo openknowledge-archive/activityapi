@@ -39,6 +39,9 @@ def _prepare(total=None, per_page=10):
     """Prepare a response object based off the incoming args (assume pagination)"""
     response = {}
     response['ok'] = True
+    if per_page<0:
+        # Unpaginated mode
+        return response
     response['page'] = int(request.args.get('page',0))
     response['per_page'] = int(request.args.get('per_page',per_page))
     response['offset'] = response['per_page'] * response['page']
@@ -79,7 +82,7 @@ def index():
 ####           URLS: /data/...
 ##################################################
 @endpoint('/data/timestamp')
-def data__timestamps():
+def data__timestamp():
     response = _prepare( Session.query(Timestamp).count() )
     q = Session.query(Timestamp)\
             .order_by(Timestamp.id.desc())\
@@ -88,8 +91,45 @@ def data__timestamps():
     response['data'] = [ {'id':x.id,'now':x.now} for x in q ] 
     return response
 
+@endpoint('/data/github')
+def data__github():
+    """Unpaginated -- there are less than 200 entries in the database"""
+    response = _prepare(per_page=-1)
+    q = Session.query(Repo).order_by(Repo.full_name)
+    response['data'] = [ x.toJson() for x in q ]
+    response['total'] = q.count()
+    return response
+
+@endpoint('/data/mailman')
+def data__mailman():
+    """Unpaginated -- there are less than 200 entries in the database"""
+    response = _prepare(per_page=-1)
+    q = Session.query(Mailman).order_by(Mailman.name)
+    response['data'] = [ x.toJson() for x in q ]
+    response['total'] = q.count()
+    return response
+
+@endpoint('/data/person')
+def data__person():
+    opinion = request.args.get('opinion',None)
+    q = Session.query(Person).order_by(Person.user_id.desc())
+    if opinion is not None:
+        if opinion=='': opinion = None
+        q = q.filter(Person._opinion==opinion)
+    response = _prepare(q.count())
+    q = q.offset(response['offset'])\
+        .limit(response['per_page'])
+    response['data'] = [ person.toJson() for person in q ] 
+    return response
+
+
+
+##################################################
+####           URLS: /activity/...
+##################################################
+
 def twitter_tweets():
-    # TODO data__twitter
+    # TODO activity__twitter? or show these via activiy for a person?
     limit = 50
     count = Session.query(Tweet).count()
     q = Session.query(Tweet).order_by(Tweet.tweet_id.desc()).limit(limit)
@@ -99,25 +139,6 @@ def twitter_tweets():
         'data': [ tweet.toJson() for tweet in q ] 
     }
     return data
-
-def person_list():
-    # TODO data__person
-    count = Session.query(Person).count()
-    q = Session.query(Person).order_by(Person.user_id.desc())
-    opinion = request.args.get('opinion',None)
-    if opinion is not None:
-        if opinion=='': opinion = None
-        q = q.filter(Person._opinion==opinion)
-    return { 
-        'total': count, 
-        'data': [ person.toJson() for person in q ] 
-    }
-
-
-
-##################################################
-####           URLS: /activity/...
-##################################################
 
 ##################################################
 ####           URLS: /history/...
