@@ -217,11 +217,11 @@ def activity__person():
 
 @endpoint('/activity/twitter')
 def activity__twitter():
-    q = Session.query(Tweet).order_by(Tweet.tweet_id.desc())
+    q = _activityquery_twitter()
     response = _prepare( q.count() )
     q = q.offset(response['offset'])\
             .limit(response['per_page'])
-    response['data'] = [ x.toJson() for x in q ]
+    response['data'] = [ _activitydict_twitter(x,y) for x,y in q ]
     return response
 
 @endpoint('/activity/github')
