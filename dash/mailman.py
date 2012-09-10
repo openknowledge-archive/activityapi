@@ -86,6 +86,7 @@ def _iterate_messages(url, latest_id, verbose=False):
     r = requests.get(url)
     tree = html.fromstring(r.text)
     links = tree.cssselect('a:nth-child(4)')
+    unique_ids = set()
     for link in links:
         month_url = url+'/'+link.attrib['href']
         base_url = month_url.replace('date.html','')
@@ -103,6 +104,10 @@ def _iterate_messages(url, latest_id, verbose=False):
                 'subject' : a[0].text_content().strip(),
                 'id' : int( a[1].attrib['name'] )
             }
+            if out['id'] in unique_ids:
+                if verbose: print '  -> BROKEN LIST violates unique ID constraint (id=%d)' % out['id']
+                continue
+            unique_ids.add(out['id'])
             if latest_id>=0 and out['id']<=latest_id:
                 if verbose: print '  -> No further messages'
                 return
