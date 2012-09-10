@@ -36,15 +36,27 @@ u {
 .url-opt {
     font-style: italic;
 }
-.accordion-inner {
-    padding-left: 30px;
-}
 .label.pull-right {
     margin-left: 2px;
+}
+.accordion-heading {
+  font-size: 11px;
 }
 .accordion-inner pre {
     margin-top: 4px;
 }
 pre .label {
     font-family: Helvetica Neue;
+}
+.example {
+  padding: 2px 10px;
+  border-left: 2px solid #eee;
+  border-right: 2px solid #eee;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  margin: 3px 0;
+  font-size: 11px;
+}
+a.accordion-toggle {
+  color: #000;
 }

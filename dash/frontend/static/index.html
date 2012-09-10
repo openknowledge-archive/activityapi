@@ -6,6 +6,11 @@
     <link rel="stylesheet" type="text/css" href="static/style.css" />
     <script src="http://code.jquery.com/jquery-1.8.1.min.js"></script>
     <script src="static/bootstrap.min.js"></script>
+    <script>
+     $(function() {
+      $('.example a').tooltip();
+     });
+    </script>
   </head>
   <body>
     <div class="container">
@@ -18,7 +23,8 @@
 <hr/>
         <h3>Optional Parameters</h3>
         <pre style="font-size: 10px">
-callback   Triggers JSONP format.</pre>
+callback   Triggers JSONP mode. Pass the name of a 
+           callback function to use.</pre>
 <pre style="font-size: 10px">
 <span style="font-weight: bold;">Endpoints with <span class="label label-info">Paginated</span> accept the following:</span>
 page       Page number. Use the resulting <b>last_page</b> value
@@ -39,10 +45,11 @@ eg: <b>?grain=day</b> returns 7 times as many results as <b>?grain=week</b>.</pr
         <div class="accordion">
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row1" class="accordion-toggle" data-toggle="collapse">
-                <u>/api/1/</u>
+                /api/1/
                 </a></div>
                 <div class="accordion-body collapse" id="row1"><div class="accordion-inner">
-                    Check the health of the API
+                    <p class="description">Check the health of the API.</p>
+<div class="example"><a href="/api/1/" title="Check the health of the API.">/api/1</a></div>
                 </div></div>
             </div>
         </div>
@@ -50,17 +57,21 @@ eg: <b>?grain=day</b> returns 7 times as many results as <b>?grain=week</b>.</pr
         <div class="accordion">
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row17" class="accordion-toggle" data-toggle="collapse">
-                <u>/api/1/stream</u>
+                /api/1/stream
                 </a></div>
                 <div class="accordion-body collapse" id="row17"><div class="accordion-inner">
-Body
+<p class="description">Stream of activity from the last four hours. Each item comes with a standard <b><u>person</u></b> object and an <b><u>_activity_type</u></b> field, which could be <u>'buddypress'</u>,<u>'twitter'</u>,<u>'github'</u> or <u>'mailman'</u>.</p>
+<div class="example"><a href="/api/1/stream" title="All user activity">/api/1/stream</a></div>
+<div class="example"><a href="/api/1/stream?opinion=staff" title="Staff activity stream">/api/1/stream?opinion=staff</a></div>
+<div class="example"><a href="/api/1/stream?login=zephod,rgrp&days=7" title="Tom & Rufus' activity from the last 7 days">/api/1/stream?login=zephod,rgrp&days=7</a></div>
                         <pre style="font-size: 10px;">
 <b>Optional Parameters</b>
 type       Comma seperated activity types.
            default: buddypress,twitter,github,mailman
 login      Comma seperated user logins.
            eg. zephod,rgrp
-opinion    Filter by the database <b>opinion</b> label.
+opinion    Select only users with the given <b>opinion</b>
+           tag in their database entry.
            eg. staff
 
 <b>Optional History Parameters</b>
@@ -71,14 +82,17 @@ days       Number of days of history per page.
 page       Step backwards through time.
            (no per_page or last_page is known) </pre>
                 </div></div>
+
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row2" class="accordion-toggle" data-toggle="collapse">
                     <span class="label label-info pull-right">Paginated</span>
-                    <u>/api/1/activity/github</u>
+                    /api/1/activity/github
                 </a></div>
                 <div class="accordion-body collapse" id="row2"><div class="accordion-inner">
-Body
+<p class="description">Stream of events occurring on OKFN's Github repositories. Each event contains a standard <b><u>person</u></b> object and a standard <b><u>repo</b></u> object.</p>
+<div class="example"><a href="/api/1/activity/github" title="All activity on OKFN-owned repositories">/api/1/activity/github</a></div>
+<div class="example"><a href="/api/1/activity/github?repo=annotator,recline" title="All activity on the Annotator and Recline repositories">/api/1/activity/github?repo=annotator,recline</a></div>
                         <pre style="font-size: 10px;">
 <b>Optional Parameters</b>
 repo    Comma seperated names of repositories.
@@ -88,10 +102,12 @@ repo    Comma seperated names of repositories.
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row3" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
-                <u>/api/1/activity/mailman</u>
+                /api/1/activity/mailman
                 </a></div>
                 <div class="accordion-body collapse" id="row3"><div class="accordion-inner">
-Body
+<p class="description">Stream of emails sent to OKFN's Mailman mailing lists. Each email event contains a standard <b><u>person</u></b> object and a standard <b><u>list</b></u> object.</p>
+<div class="example"><a href="/api/1/activity/mailman" title="All activity on OKFN's mailing lists">/api/1/activity/mailman</a></div>
+<div class="example"><a href="/api/1/activity/mailman?list=ckan-dev,ckan-discuss" title="All activity on the public CKAN mailing lists">/api/1/activity/mailman?list=ckan-dev,ckan-discuss</a></div>
                         <pre style="font-size: 10px;">
 <b>Optional Parameters</b>
 list    Comma seperated names of mailman lists.
@@ -101,10 +117,11 @@ list    Comma seperated names of mailman lists.
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row4" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
-                <u>/api/1/activity/twitter</u>
+                /api/1/activity/twitter
                 </a></div>
                 <div class="accordion-body collapse" id="row4"><div class="accordion-inner">
-                    Body
+<p class="description">Stream of tweets created by members of the OKFN's user database (where they have filled out the <u>twitter</u> field on <a href="http://okfn.org">okfn.org</a>). Each tweet event contains a standard <b><u>person</u></b> object.</p>
+<div class="example"><a href="/api/1/activity/twitter" title="All twitter activity from OKFN members">/api/1/activity/twitter</a></div>
                 </div></div>
             </div>
         </div>
@@ -112,27 +129,32 @@ list    Comma seperated names of mailman lists.
         <div class="accordion">
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row5" class="accordion-toggle" data-toggle="collapse">
-                <u>/api/1/data/github</u>
+                /api/1/data/github
                 </a></div>
                 <div class="accordion-body collapse" id="row5"><div class="accordion-inner">
-                    Body
+<p class="description">List the Github repositories that the backend is tracking. Produces a list of standard <b><u>repo</b></u> objects.</p>
+<div class="example"><a href="/api/1/data/github" title="List of Github repos">/api/1/data/github</a></div>
                 </div></div>
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row6" class="accordion-toggle" data-toggle="collapse">
-                <u>/api/1/data/mailman</u>
+                /api/1/data/mailman
                 </a></div>
                 <div class="accordion-body collapse" id="row6"><div class="accordion-inner">
-                    Body
+<p class="description">List the Mailman mailing lists that the backend is tracking. Produces a list of standard <b><u>list</b></u> objects.</p>
+<div class="example"><a href="/api/1/data/mailman" title="List of Mailman lists">/api/1/data/mailman</a></div>
+
                 </div></div>
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row7" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
-                <u>/api/1/data/person</u>
+                /api/1/data/person
                 </a></div>
                 <div class="accordion-body collapse" id="row7"><div class="accordion-inner">
-Body
+<p class="description">List the people that the backend is tracking. Produces a list of standard <b><u>list</b></u> objects. The source is the <a href="http://okfn.org/members">Buddypress user database</a>.</p>
+<div class="example"><a href="/api/1/data/person" title="List of OKFN members">/api/1/data/person</a></div>
+<div class="example"><a href="/api/1/data/person?opinion=staff" title="List of OKFN staff members">/api/1/data/person?opinion=staff</a></div>
                         <pre style="font-size: 10px;">
 <b>Optional Parameters</b>
 opinion   Filter by opinion label in database.
@@ -142,10 +164,11 @@ opinion   Filter by opinion label in database.
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row8" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
-                <u>/api/1/data/timestamp</u>
+                /api/1/data/timestamp
                 </a></div>
                 <div class="accordion-body collapse" id="row8"><div class="accordion-inner">
-                    Body
+                    <p class="description">List the timestamp objects (posted every ten minutes; used for <b><u>cron</u></b> debugging; useful for tracking API up-time).</p>
+                    <div class="example"><a href="/api/1/data/timestamp" title="List of timestamps">/api/1/data/timestamp</a></div>
                 </div></div>
             </div>
         </div>
@@ -154,77 +177,83 @@ opinion   Filter by opinion label in database.
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row12" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-important pull-right">Granular</span>
-                <u>/api/1/history/github</u>
+                /api/1/history/github
                 </a></div>
                 <div class="accordion-body collapse" id="row12"><div class="accordion-inner">
-                    Body
+                    <p class="description">Snapshot of historical stats for all Github repos. For more detailed history use the <u><b>/api/1/history/github/<i>repo_name</i></b></u> endpoint for granular, paginated browsing of a single repository's statistics.</p>
+                    <div class="example"><a href="/api/1/history/github" title="All-repo history">/api/1/history/github</a></div>
                 </div></div>
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row14" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-important pull-right">Granular</span>
-                <u>/api/1/history/mailman</u>
+                /api/1/history/mailman
                 </a></div>
                 <div class="accordion-body collapse" id="row14"><div class="accordion-inner">
-                    Body
+                    <p class="description">Snapshot of historical stats for all Mailman lists. For more detailed history use the <u><b>/api/1/history/mailman/<i>list_name</i></b></u> endpoint for granular, paginated browsing of a single list's statistics.</p>
+                    <div class="example"><a href="/api/1/history/mailman" title="All-list history">/api/1/history/mailman</a></div>
                 </div></div>
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row13" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
                 <span class="label label-important pull-right">Granular</span>
-                <u>/api/1/history/github/<span class="url-opt">&lt;repo_name&gt;</span></u>
+                /api/1/history/github/<span class="url-opt">&lt;repo_name&gt;</span>
             </a></div>
                 <div class="accordion-body collapse" id="row13"><div class="accordion-inner">
-                    Body
+                    <p class="description">Browse complete history of a GitHub repository's statistics (its <u>watchers</u>, <u>forks</u>, <u>issues</u> and <u>size</u>).</p>
+                    <div class="example"><a href="/api/1/history/github/ckan" title="Last 10 days of CKAN snapshots">/api/1/history/github/ckan</a></div>
+                    <div class="example"><a href="/api/1/history/github/ckan?grain=week" title="Last 10 weeks of CKAN snapshots">/api/1/history/github/ckan?grain=week</a></div>
+                    <div class="example"><a href="/api/1/history/github/ckan?grain=month&per_page=12" title="Last 12 months of CKAN snapshots">/api/1/history/github/ckan?grain=month&per_page=12</a></div>
                 </div></div>
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row15" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
                 <span class="label label-important pull-right">Granular</span>
-                <u>/api/1/history/mailman/<span class="url-opt">&lt;list_name&gt;</span></u>
+                /api/1/history/mailman/<span class="url-opt">&lt;list_name&gt;</span>
                 </a></div>
                 <div class="accordion-body collapse" id="row15"><div class="accordion-inner">
-                    Body
+                    <p class="description">Browse complete history of a Mailman list's statistics (its <u>subscribers</u> and its <u>posts</u> this day/week/month etc).</p>
+                    <div class="example"><a href="/api/1/history/mailman/ckan-discuss" title="Last 10 days of ckan-dev snapshots">/api/1/history/mailman/ckan-discuss</a></div>
+                    <div class="example"><a href="/api/1/history/mailman/ckan-discuss?grain=week" title="Last 10 weeks of ckan-dev snapshots">/api/1/history/mailman/ckan-discuss?grain=week</a></div>
+                    <div class="example"><a href="/api/1/history/mailman/ckan-discuss?grain=month&per_page=12" title="Last 12 months of ckan-dev snapshots">/api/1/history/mailman/ckan-discuss?grain=month&per_page=12</a></div>
                 </div></div>
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row11" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
                 <span class="label label-important pull-right">Granular</span>
-                <u>/api/1/history/buddypress</u>
+                /api/1/history/buddypress
                 </a></div>
                 <div class="accordion-body collapse" id="row11"><div class="accordion-inner">
-                    Body
+                    <p class="description">Browse the history of our Buddypress membership numbers (snapshots of <b><u>num_users</u></b> every day since the site began.</p>
+                    <div class="example"><a href="/api/1/history/buddypress" title="Last 10 days of user counts">/api/1/history/buddypress</a></div>
+                    <div class="example"><a href="/api/1/history/buddypress?grain=week" title="Last 10 weeks of user counts">/api/1/history/buddypress?grain=week</a></div>
+                    <div class="example"><a href="/api/1/history/buddypress?grain=month&per_page=12" title="Last 12 months of user counts">/api/1/history/buddypress?grain=month&per_page=12</a></div>
                 </div></div>
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row16" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
-                <u>/api/1/history/twitter</u>
+                /api/1/history/twitter
                 </a></div>
                 <div class="accordion-body collapse" id="row16"><div class="accordion-inner">
-                    Body
+                    <p class="description">Browse the history of Twitter statistical analysis. This counts the number of <b><u>tweets_today</u></b>, and lists the 20 most active <b><u>authors</u></b>, and the 20 most frequently mentioned <b><u>links</u></b>, <b><u>hashtags</u></b> and <b><u>words</u></b>.</p>
+                    <div class="example"><a href="/api/1/history/twitter" title="Last 10 days of analysis">/api/1/history/twitter</a></div>
+                    <div class="example"><a href="/api/1/history/twitter?page=1&per_page=30" title="Analysis from one month ago (approx)">/api/1/history/twitter?page=1&per_page=30</a></div>
                 </div></div>
             </div>
         </div>
         <h4>Debug</h4>
         <div class="accordion">
             <div class="accordion-group">
-                <div class="accordion-heading"><a href="#row9" class="accordion-toggle" data-toggle="collapse">
-                <u>/api/1/debug/request</u>
-                </a></div>
-                <div class="accordion-body collapse" id="row9"><div class="accordion-inner">
-                    Body
-                </div></div>
-            </div>
-            <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row10" class="accordion-toggle" data-toggle="collapse">
-                <u>/api/1/debug/twitter_ratelimit</u>
+                /api/1/debug/twitter_ratelimit
                 </a></div>
                 <div class="accordion-body collapse" id="row10"><div class="accordion-inner">
-                    Body
+                    <p class="description">How many Twitter API hits can the Activity server make in the next hour?</p>
+                    <div class="example"><a href="/api/1/debug/twitter_ratelimit" title="Twitter API rate limit check">/api/1/debug/twitter_ratelimit</a></div>
                 </div></div>
             </div>
         </div>
