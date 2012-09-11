@@ -213,10 +213,10 @@ class Person(Base):
             out.__setattr__(k, v)
         return out
     def toJson(self):
-        fields = [  'website', 'about', 'user_id', 'last_active',
-                    'twitter', 'permalink', 'location',
-                    'display_name', 'login', 'email', 'avatar', 
-                    '_opinion', '_projects']
+        fields = [  'website', 'about', 'last_active',
+                    'twitter', 'github', 'permalink', 'location',
+                    'display_name', 'login', 'avatar', 
+                    '_opinion' ]
         out = { x:self.__getattribute__(x) for x in fields }
         out['registered'] = self.registered.isoformat()
         return out
