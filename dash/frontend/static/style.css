@@ -42,6 +42,9 @@ u {
 .accordion-heading {
   font-size: 11px;
 }
+.accordion-toggle {
+  padding-right: 4px !important;
+}
 .accordion-inner pre {
     margin-top: 4px;
 }

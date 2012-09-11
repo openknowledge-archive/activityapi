@@ -184,7 +184,7 @@ def activity__github():
     select_repos = request.args.get('repo',None)
     q = _activityquery_github()
     if select_repos is not None:
-        select_repos = [ 'okfn/'+x for x in select_repos.split(',') ]
+        select_repos = select_repos.split(',')
         q = q.filter(Repo.full_name.in_(select_repos))
     response = _prepare( q.count() )
     q = q.offset(response['offset'])\
@@ -324,12 +324,13 @@ def history__github_all():
     return response
 
 
-@endpoint('/history/github/<reponame>')
+@endpoint('/history/github/<owner>/<reponame>')
 def history__github(**args):
+    reponame = args['owner']+'/'+args['reponame']
     repo = Session.query(Repo)\
-            .filter(Repo.full_name=='okfn/'+args['reponame'])\
+            .filter(Repo.full_name==reponame)\
             .first()
-    assert repo, 'repository "%s" does not exist' % args['reponame']
+    assert repo, 'repository "%s" does not exist' % reponame
     grain = _get_grain()
     date_group = func.date_trunc(grain, SnapshotOfRepo.timestamp)
     # Count the results
@@ -367,7 +368,7 @@ def history__github(**args):
     return response
 
 @endpoint('/history/mailman')
-def history__mailman_all(**args):
+def history__mailman_all():
     grain = _get_grain()
     date_group = func.date_trunc(grain, SnapshotOfMailman.timestamp)
     num_lists = Session.query(Mailman).count()
@@ -438,7 +439,7 @@ def history__mailman(**args):
 
 
 @endpoint('/history/buddypress')
-def history__buddypress(**args):
+def history__buddypress():
     grain = _get_grain()
     date_group = func.date_trunc(grain, SnapshotOfBuddypress.timestamp)
     # Count the results
