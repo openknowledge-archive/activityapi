@@ -152,13 +152,16 @@ list    Comma seperated names of mailman lists.
                 /api/1/data/person
                 </a></div>
                 <div class="accordion-body collapse" id="row7"><div class="accordion-inner">
-<p class="description">List the people that the backend is tracking. Produces a list of standard <b><u>list</b></u> objects. The source is the <a href="http://okfn.org/members">Buddypress user database</a>.</p>
+<p class="description">List the people that the backend is tracking. Produces a list of standard <b><u>person</b></u> objects. The source is the <a href="http://okfn.org/members">Buddypress user database</a>.</p>
 <div class="example"><a href="/api/1/data/person" title="List of OKFN members">/api/1/data/person</a></div>
 <div class="example"><a href="/api/1/data/person?opinion=staff" title="List of OKFN staff members">/api/1/data/person?opinion=staff</a></div>
+<div class="example"><a href="/api/1/data/person?login=zephod" title="Get Tom's user account">/api/1/data/person?login=zephod</a></div>
                         <pre style="font-size: 10px;">
 <b>Optional Parameters</b>
 opinion   Filter by opinion label in database.
-          eg. 'staff'</pre>
+          eg. 'staff'
+login     Comma-seperated list of logins to target
+          eg. 'rgrp,zephod'</pre>
                 </div></div>
             </div>
             <div class="accordion-group">

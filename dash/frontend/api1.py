@@ -110,10 +110,14 @@ def data__mailman():
 @endpoint('/data/person')
 def data__person():
     opinion = request.args.get('opinion',None)
+    login = request.args.get('login',None)
     q = Session.query(Person).order_by(Person.user_id.desc())
     if opinion is not None:
         if opinion=='': opinion = None
         q = q.filter(Person._opinion==opinion)
+    if login is not None:
+        login = login.split(',')
+        q = q.filter(Person.login.in_(login))
     response = _prepare(q.count())
     q = q.offset(response['offset'])\
         .limit(response['per_page'])
