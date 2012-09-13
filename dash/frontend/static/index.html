@@ -189,12 +189,19 @@ login     Comma-seperated list of logins to target
             </div>
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row14" class="accordion-toggle" data-toggle="collapse">
+                <span class="label label-info pull-right">Paginated</span>
                 <span class="label label-important pull-right">Granular</span>
                 /api/1/history/mailman
                 </a></div>
                 <div class="accordion-body collapse" id="row14"><div class="accordion-inner">
                     <p class="description">Snapshot of historical stats for all Mailman lists. For more detailed history use the <u><b>/api/1/history/mailman/<i>list_name</i></b></u> endpoint for granular, paginated browsing of a single list's statistics.</p>
                     <div class="example"><a href="/api/1/history/mailman" title="All-list history">/api/1/history/mailman</a></div>
+                    <div class="example"><a href="/api/1/history/mailman?grain=month&per_page=2" title="Last two months of each repo">/api/1/history/mailman?grain=month&per_page=2</a></div>
+                    <div class="example"><a href="/api/1/history/mailman?list=ckan-discuss,ckan-dev&per_page=52&grain=week" title="Last 52 weeks of the CKAN mailing lists">/api/1/history/mailman?list=ckan-discuss,ckan-dev&per_page=52&grain=week</a></div>
+                <pre style="font-size: 10px;">
+<b>Optional Parameters</b>
+list    Comma seperated names of mailman lists.
+        eg: ckan-dev,ckan-discuss</pre>
                 </div></div>
             </div>
             <div class="accordion-group">
@@ -208,19 +215,6 @@ login     Comma-seperated list of logins to target
                     <div class="example"><a href="/api/1/history/github/okfn/ckan" title="Last 10 days of CKAN snapshots">/api/1/history/github/okfn/ckan</a></div>
                     <div class="example"><a href="/api/1/history/github/okfn/ckan?grain=week" title="Last 10 weeks of CKAN snapshots">/api/1/history/github/okfn/ckan?grain=week</a></div>
                     <div class="example"><a href="/api/1/history/github/okfn/ckan?grain=month&per_page=12" title="Last 12 months of CKAN snapshots">/api/1/history/github/okfn/ckan?grain=month&per_page=12</a></div>
-                </div></div>
-            </div>
-            <div class="accordion-group">
-                <div class="accordion-heading"><a href="#row15" class="accordion-toggle" data-toggle="collapse">
-                <span class="label label-info pull-right">Paginated</span>
-                <span class="label label-important pull-right">Granular</span>
-                /api/1/history/mailman/<span class="url-opt">&lt;list_name&gt;</span>
-                </a></div>
-                <div class="accordion-body collapse" id="row15"><div class="accordion-inner">
-                    <p class="description">Browse complete history of a Mailman list's statistics (its <u>subscribers</u> and its <u>posts</u> this day/week/month etc).</p>
-                    <div class="example"><a href="/api/1/history/mailman/ckan-discuss" title="Last 10 days of ckan-dev snapshots">/api/1/history/mailman/ckan-discuss</a></div>
-                    <div class="example"><a href="/api/1/history/mailman/ckan-discuss?grain=week" title="Last 10 weeks of ckan-dev snapshots">/api/1/history/mailman/ckan-discuss?grain=week</a></div>
-                    <div class="example"><a href="/api/1/history/mailman/ckan-discuss?grain=month&per_page=12" title="Last 12 months of ckan-dev snapshots">/api/1/history/mailman/ckan-discuss?grain=month&per_page=12</a></div>
                 </div></div>
             </div>
             <div class="accordion-group">

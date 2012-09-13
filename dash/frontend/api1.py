@@ -372,73 +372,65 @@ def history__github(**args):
     return response
 
 @endpoint('/history/mailman')
-def history__mailman_all():
+def history__mailman():
     grain = _get_grain()
+    # Map of mailman entries
+    mailman = { x.id : x for x in Session.query(Mailman) }
+    # Filtered list of mailman IDs
+    lists = request.args.get('list')
+    listFilter = None
+    if lists is not None:
+        lists = lists.split(',')
+        ids = []
+        for name in lists:
+            m = filter(lambda x:x.name==name, mailman.values())
+            assert m,'list %s does not exist' % name
+            ids.append(m[0].id)
+        listFilter = SnapshotOfMailman.mailman_id.in_(ids)
+    # Date filter
     date_group = func.date_trunc(grain, SnapshotOfMailman.timestamp)
-    num_lists = Session.query(Mailman).count()
-    # Execute the query
-    fromobj = select([ date_group,\
-                    SnapshotOfMailman.mailman_id,\
-                    func.max(SnapshotOfMailman.posts_today),\
-                    func.max(SnapshotOfMailman.subscribers)])\
-            .group_by(SnapshotOfMailman.mailman_id)\
+    # Query: Range of dates
+    q1 = Session.query()\
+            .add_column( func.distinct(date_group).label('d') )\
+            .order_by(date_group.desc())
+    response = _prepare(q1.count())
+    q1 = q1.offset( response['offset'] )\
+            .limit( response['per_page'] )
+    if q1.count():
+        subquery = q1.subquery()
+        (min_date,max_date) = Session.query(func.min(subquery.columns.d), func.max(subquery.columns.d)).first()
+    else:
+        # Impossible date range
+        (min_date,max_date) = datetime.now()+timedelta(days=1),datetime.now()
+    # Grouped query
+    S = SnapshotOfMailman
+    q = Session.query()\
+            .add_column( func.sum(S.posts_today) )\
+            .add_column( func.max(S.subscribers) )\
+            .add_column( date_group )\
+            .add_column( S.mailman_id )\
             .group_by(date_group)\
-            .order_by(date_group.desc())\
-            .limit(num_lists*12)\
-            .alias('fromobj')
-    # Hit the DB with one (quite complex) query to group by date & join on Repo
-    q = Session.query(fromobj,Mailman).filter(Mailman.id==fromobj.c['mailman_id'])
+            .group_by(S.mailman_id)\
+            .order_by(date_group)\
+            .filter( date_group>=min_date )\
+            .filter( date_group<=max_date )\
+            .filter( listFilter )
     results = {}
     _dictize = lambda x: {
-        'timestamp':x[0].date().isoformat(),
-        'posts':x[2],
-        'subscribers':x[3],
+        'posts':x[0],
+        'subscribers':x[1],
+        'timestamp':x[2].isoformat(),
     }
     for x in q:
-        mailman = x[4]
-        n = mailman.name
-        if not n in results:
-            results[n] = { 'mailman' : mailman.toJson(), 'data': [] }
-        # Add a history entry
-        results[n]['data'].append( _dictize(x) )
+        m = mailman[ x[3] ]
+        results[m.name] = results.get(m.name, { 'mailman':m.toJson(), 'data':[] })
+        results[m.name]['data'].append( _dictize(x) )
     # Inner function transforms SELECT tuple into recognizable format
-    response = {'ok':True}
     response['grain'] = grain
     response['data'] = results
-    return response
-
-@endpoint('/history/mailman/<listname>')
-def history__mailman(**args):
-    mailman = Session.query(Mailman)\
-            .filter(Mailman.name==args['listname'])\
-            .first()
-    assert mailman, 'list "%s" does not exist' % args['listname']
-    grain = _get_grain()
-    date_group = func.date_trunc(grain, SnapshotOfMailman.timestamp)
-    # Count the results
-    response = _prepare(_count_group_by(date_group))
-    # Execute the query
-    stmt = select([ date_group,\
-                    func.sum(SnapshotOfMailman.posts_today),\
-                    func.max(SnapshotOfMailman.subscribers)])\
-            .group_by(date_group)\
-            .where(SnapshotOfMailman.mailman_id==mailman.id)\
-            .order_by(date_group.desc())\
-            .offset(response['offset'])\
-            .limit(response['per_page'])
-    q = engine.execute(stmt)
-    # Inner function transforms SELECT tuple into recognizable format
-    _dictize = lambda x: {
-        'timestamp':x[0].date().isoformat(),
-        'posts':x[1],
-        'subscribers':x[2]
-    }
-    response['data'] = [ _dictize(x) for x in q ] 
-    response['grain'] = grain
-    response['list_id'] = mailman.id
-    response['list_name'] = mailman.name
-    response['list_link'] = mailman.link
-    response['list_description'] = mailman.description
+    response['list'] = lists
+    response['min_date'] = min_date.isoformat()
+    response['max_date'] = max_date.isoformat()
     return response
 
 
