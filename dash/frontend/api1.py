@@ -339,7 +339,7 @@ def history__github():
         'forks':x[1],
         'issues':x[2],
         'size':x[3],
-        'timestamp':x[4].isoformat(),
+        'timestamp':x[4].date().isoformat(),
     }
     for x in q:
         r = github[ x[5] ]
@@ -349,8 +349,8 @@ def history__github():
     response['grain'] = grain
     response['data'] = results
     response['repos'] = repo
-    response['min_date'] = min_date.isoformat()
-    response['max_date'] = max_date.isoformat()
+    response['min_date'] = min_date.date().isoformat()
+    response['max_date'] = max_date.date().isoformat()
     return response
 
 
