@@ -288,88 +288,71 @@ def history__twitter():
     return response
 
 @endpoint('/history/github')
-def history__github_all():
+def history__github():
     grain = _get_grain()
+    # Map of github entries
+    github = { x.id : x for x in Session.query(Repo) }
+    # Filtered list of github IDs
+    repo = request.args.get('repo', None)
+    repoFilter = None
+    if repo is not None:
+        repo = repo.split(',')
+        ids = []
+        for name in repo:
+            m = filter(lambda x:x.full_name==name, github.values())
+            assert m,'Repository %s does not exist' % name
+            ids.append(m[0].id)
+        repoFilter = SnapshotOfRepo.repo_id.in_(ids)
+    # Date filter
     date_group = func.date_trunc(grain, SnapshotOfRepo.timestamp)
-    num_repos = Session.query(Repo).count()
-    # Execute the query
-    fromobj = select([ date_group,\
-                    SnapshotOfRepo.repo_id,\
-                    func.max(SnapshotOfRepo.open_issues),\
-                    func.max(SnapshotOfRepo.size),\
-                    func.max(SnapshotOfRepo.watchers),\
-                    func.max(SnapshotOfRepo.forks)])\
-            .group_by(SnapshotOfRepo.repo_id)\
+    # Query: Range of dates
+    q1 = Session.query()\
+            .add_column( func.distinct(date_group).label('d') )\
+            .order_by(date_group.desc())
+    response = _prepare(q1.count())
+    q1 = q1.offset( response['offset'] )\
+            .limit( response['per_page'] )
+    if q1.count():
+        date_column = q1.subquery().columns.d
+        (min_date,max_date) = Session.query(func.min(date_column), func.max(date_column)).first()
+    else:
+        # Impossible date range
+        (min_date,max_date) = datetime.now()+timedelta(days=1),datetime.now()
+    # Grouped query
+    S = SnapshotOfRepo
+    q = Session.query()\
+            .add_column( func.sum(S.watchers) )\
+            .add_column( func.max(S.forks) )\
+            .add_column( func.max(S.open_issues) )\
+            .add_column( func.max(S.size) )\
+            .add_column( date_group )\
+            .add_column( S.repo_id )\
             .group_by(date_group)\
-            .order_by(date_group.desc())\
-            .limit(num_repos*12)\
-            .alias('fromobj')
-    # Hit the DB with one (quite complex) query to group by date & join on Repo
-    q = Session.query(fromobj,Repo).filter(Repo.id==fromobj.c['repo_id'])
+            .group_by(S.repo_id)\
+            .order_by(date_group)\
+            .filter( date_group>=min_date )\
+            .filter( date_group<=max_date )\
+            .filter( repoFilter )
     results = {}
     _dictize = lambda x: {
-        'timestamp':x[0].date().isoformat(),
-        'open_issues':x[2],
+        'watchers':x[0],
+        'forks':x[1],
+        'issues':x[2],
         'size':x[3],
-        'watchers':x[4],
-        'forks':x[5],
+        'timestamp':x[4].isoformat(),
     }
     for x in q:
-        repo = x[6]
-        n = repo.full_name
-        if not n in results:
-            results[n] = { 'repo' : repo.toJson(), 'data': [] }
-        # Add a history entry
-        results[n]['data'].append( _dictize(x) )
+        r = github[ x[5] ]
+        results[r.full_name] = results.get(r.full_name, { 'repo':r.toJson(), 'data':[] })
+        results[r.full_name]['data'].append( _dictize(x) )
     # Inner function transforms SELECT tuple into recognizable format
-    response = {'ok':True}
     response['grain'] = grain
     response['data'] = results
+    response['repos'] = repo
+    response['min_date'] = min_date.isoformat()
+    response['max_date'] = max_date.isoformat()
     return response
 
-
-@endpoint('/history/github/<owner>/<reponame>')
-def history__github(**args):
-    reponame = args['owner']+'/'+args['reponame']
-    repo = Session.query(Repo)\
-            .filter(Repo.full_name==reponame)\
-            .first()
-    assert repo, 'repository "%s" does not exist' % reponame
-    grain = _get_grain()
-    date_group = func.date_trunc(grain, SnapshotOfRepo.timestamp)
-    # Count the results
-    response = _prepare(_count_group_by(date_group))
-    # Execute the query
-    stmt = select([ date_group,\
-                    func.max(SnapshotOfRepo.open_issues),\
-                    func.max(SnapshotOfRepo.size),\
-                    func.max(SnapshotOfRepo.watchers),\
-                    func.max(SnapshotOfRepo.forks)])\
-            .group_by(date_group)\
-            .where(SnapshotOfRepo.repo_id==repo.id)\
-            .order_by(date_group.desc())\
-            .offset(response['offset'])\
-            .limit(response['per_page'])
-    q = engine.execute(stmt)
-    # Inner function transforms SELECT tuple into recognizable format
-    _dictize = lambda x: {
-        'timestamp':x[0].date().isoformat(),
-        'open_issues':x[1],
-        'size':x[2],
-        'watchers':x[3],
-        'forks':x[4],
-    }
-    response['data'] = [ _dictize(x) for x in q ] 
-    response['grain'] = grain
-    response['repo_id'] = repo.id
-    response['repo_created_at'] = repo.created_at.isoformat()
-    response['repo_description'] = repo.description
-    response['repo_fork'] = repo.fork
-    response['repo_full_name'] = repo.full_name
-    response['repo_homepage'] = repo.homepage
-    response['repo_html_url'] = repo.html_url
-    response['repo_language'] = repo.language
-    return response
 
 @endpoint('/history/mailman')
 def history__mailman():
