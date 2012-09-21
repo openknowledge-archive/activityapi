@@ -147,6 +147,27 @@ class SnapshotOfBuddypress(Base):
             'num_users': self.num_users
         }
 
+class SnapshotOfTwitterAccount(Base):
+    __tablename__='snapshot_twitteraccount'
+    timestamp = Column(Date, primary_key=True) 
+    screen_name = Column(String, primary_key=True)
+    followers = Column(Integer)
+    following = Column(Integer)
+    tweets = Column(Integer)
+    def __init__(self,timestamp,screen_name,followers,following,tweets):
+        self.timestamp = timestamp
+        self.screen_name = screen_name
+        self.followers = followers
+        self.following = following
+        self.tweets = tweets
+    def toJson(self):
+        return {
+            'timestamp': self.timestamp.isoformat(),
+            'screen_name': self.screen_name,
+            'followers': self.followers,
+            'following': self.following,
+            'tweets': self.tweets
+        }
 
 class Tweet(Base):
     __tablename__='activity_twitter'
@@ -185,6 +206,26 @@ class Tweet(Base):
             'geo': self.get_geo(),
             'text':self.text
         }
+
+class TwitterAccount(Base):
+    __tablename__='twitteraccount'
+    screen_name = Column(String, primary_key=True)
+    followers = Column(Integer)
+    following = Column(Integer)
+    tweets = Column(Integer)
+    name = Column(String)
+    description = Column(String)
+    def __init__(self,screen_name):
+        self.screen_name = screen_name
+    def toJson(self):
+        return {
+                'screen_name': self.screen_name,
+                'followers': self.followers,
+                'following': self.following,
+                'tweets': self.tweets,
+                'name': self.name,
+                'description': self.description,
+                }
 
 class Person(Base):
     __tablename__='person'

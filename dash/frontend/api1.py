@@ -124,6 +124,15 @@ def data__person():
     response['data'] = [ person.toJson() for person in q ] 
     return response
 
+@endpoint('/data/twitter/account')
+def data__twitter_account():
+    """Unpaginated -- there are only a handful of rows in the database"""
+    response = {'ok' : True}
+    q = Session.query(TwitterAccount).order_by(TwitterAccount.screen_name)
+    response['data'] = { x.screen_name :  x.toJson() for x in q }
+    response['total'] = q.count()
+    return response
+
 
 
 ##################################################
@@ -163,24 +172,24 @@ def _activitydict_buddypress(act,person):
     out['_activity_type'] = 'buddypress'
     return out
     
-def _activityquery_twitter():
+def _activityquery_twitter_tweets():
     return Session.query(Tweet,Person)\
             .order_by(Tweet.timestamp.desc())\
             .filter(Person.twitter==Tweet.screen_name)
-def _activitydict_twitter(act,person):
+def _activitydict_twitter_tweets(act,person):
     out = act.toJson()
     out['person'] = person.toJson()
     out['_activity_type'] = 'twitter'
     return out
     
 
-@endpoint('/activity/twitter')
-def activity__twitter():
-    q = _activityquery_twitter()
+@endpoint('/activity/twitter/tweet')
+def activity__twitter_tweet():
+    q = _activityquery_twitter_tweets()
     response = _prepare( q.count() )
     q = q.offset(response['offset'])\
             .limit(response['per_page'])
-    response['data'] = [ _activitydict_twitter(x,y) for x,y in q ]
+    response['data'] = [ _activitydict_twitter_tweets(x,y) for x,y in q ]
     return response
 
 @endpoint('/activity/github')
@@ -255,8 +264,8 @@ def stream():
         q = _activityquery_buddypress().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(ActivityInBuddypress) )
         results += [ _activitydict_buddypress(x,y) for x,y in q ]
     if 'twitter' in types:
-        q = _activityquery_twitter().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(Tweet) )
-        results += [ _activitydict_twitter(x,y) for x,y in q ]
+        q = _activityquery_twitter_tweets().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(Tweet) )
+        results += [ _activitydict_twitter_tweets(x,y) for x,y in q ]
     results = sorted(results, key = lambda x : x['timestamp'],reverse=True)
     # Construct a results object 
     response = { 'ok': True }
@@ -277,14 +286,29 @@ def stream():
 ##################################################
 ####           URLS: /history/...
 ##################################################
-@endpoint('/history/twitter')
-def history__twitter():
+@endpoint('/history/twitter/tweet')
+def history__twitter_tweet():
     response = _prepare( Session.query(SnapshotOfTwitter).count() )
     q = Session.query(SnapshotOfTwitter)\
             .order_by(SnapshotOfTwitter.timestamp.desc())\
             .offset(response['offset'])\
             .limit(response['per_page'])
     response['data'] = [ x.toJson() for x in q ] 
+    return response
+
+@endpoint('/history/twitter/account')
+def history__twitter_account():
+    accountname = request.args.get('name',None)
+    assert accountname is not None, 'Missing parameter: name (eg. ?name=okfn)'
+    account = Session.query(TwitterAccount).filter(TwitterAccount.screen_name==accountname).first()
+    assert account, 'Twitter account %s is not tracked by the database.' % accont
+    q = Session.query(SnapshotOfTwitterAccount).filter(SnapshotOfTwitterAccount.screen_name==accountname)
+    response = _prepare( q.count() )
+    q = q.order_by(SnapshotOfTwitterAccount.timestamp.desc())\
+         .offset(response['offset'])\
+         .limit(response['per_page'])
+    response['data'] = [ x.toJson() for x in q ] 
+    response['account'] = account.toJson() 
     return response
 
 @endpoint('/history/github')
@@ -422,7 +446,7 @@ def history__buddypress():
     grain = _get_grain()
     date_group = func.date_trunc(grain, SnapshotOfBuddypress.timestamp)
     # Count the results
-    response = _prepare(_count_group_by(date_group))
+    response = _prepare()
     # Execute the query
     stmt = select([ date_group,\
                     func.max(SnapshotOfBuddypress.num_users)])\

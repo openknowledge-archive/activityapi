@@ -2,7 +2,7 @@ import tweepy
 import os
 import re
 from dash.backend import Session
-from dash.backend.model import Tweet,Person,SnapshotOfTwitter
+from dash.backend.model import Tweet,Person,SnapshotOfTwitter,TwitterAccount,SnapshotOfTwitterAccount
 from sqlalchemy import func
 from datetime import datetime,timedelta
 
@@ -68,7 +68,33 @@ def _connect():
     return tweepy.API(auth)
 
 
+### daily snapshot_twitteraccounts mechanism
+### Monitors follower stats for each twitteraccount
+def scrape_twitteraccounts(verbose=False):
+    api = _connect()
+    for ta in Session.query(TwitterAccount):
+        if verbose: print 'Scraping %s...' % ta.screen_name
+        u = api.get_user(ta.screen_name)
+        ta.followers = u.followers_count
+        ta.following = u.friends_count
+        ta.tweets = u.statuses_count
+        ta.name = u.name
+        ta.description = u.description
+        if verbose: print ta.toJson()
+    Session.commit()
+
+
+def snapshot_twitteraccounts(verbose=False):
+    """Create today's SnapshotOfTwitterAccount"""
+    today = datetime.now().date()
+    for ta in Session.query(TwitterAccount):
+        sn = SnapshotOfTwitterAccount(today, ta.screen_name, ta.followers, ta.following, ta.tweets)
+        if verbose: print 'Snapshot created:',sn.toJson()
+        Session.add(sn)
+    Session.commit()
+
 ### daily snapshot_twitter mechanism
+### Downloads all tweet data
 
 def snapshot_twitter(verbose=False):
     """Create SnapshotOfTwitter objects in the database for 
