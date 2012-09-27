@@ -301,7 +301,7 @@ def history__twitter_account():
     accountname = request.args.get('name',None)
     assert accountname is not None, 'Missing parameter: name (eg. ?name=okfn)'
     account = Session.query(TwitterAccount).filter(TwitterAccount.screen_name==accountname).first()
-    assert account, 'Twitter account %s is not tracked by the database.' % accont
+    assert account, 'Twitter account %s is not tracked by the database.' % account
     q = Session.query(SnapshotOfTwitterAccount).filter(SnapshotOfTwitterAccount.screen_name==accountname)
     response = _prepare( q.count() )
     q = q.order_by(SnapshotOfTwitterAccount.timestamp.desc())\

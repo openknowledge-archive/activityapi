@@ -344,7 +344,7 @@ class ActivityInGithub(Base):
             'timestamp' : self.timestamp.isoformat(),
             'type' : self.type,
             'repo' : self.repo,
-            'payload' : self.payload,
+            'github_payload' : json.loads(self.payload),
         }
 
 Base.metadata.create_all()
