@@ -56,16 +56,6 @@ def _get_grain():
     assert grain in valid, 'Grain must be one of: %s. (Got value: "%s")' % (json.dumps(valid), grain)
     return grain
 
-def _count_group_by(grouping):
-    """Count the number of rows a SELECT ... GROUP BY will return."""
-    return engine.execute(\
-                select([grouping])\
-                    .group_by(grouping)\
-                    .alias('tmp')\
-                    .count()\
-            )\
-            .first()[0]
-
 ##################################################
 ####           URL: /
 ##################################################
@@ -353,7 +343,7 @@ def history__github():
             .add_column( S.repo_id )\
             .group_by(date_group)\
             .group_by(S.repo_id)\
-            .order_by(date_group)\
+            .order_by(date_group.desc())\
             .filter( date_group>=min_date )\
             .filter( date_group<=max_date )\
             .filter( repoFilter )
@@ -418,21 +408,23 @@ def history__mailman():
             .add_column( S.mailman_id )\
             .group_by(date_group)\
             .group_by(S.mailman_id)\
-            .order_by(date_group)\
+            .order_by(date_group.desc())\
             .filter( date_group>=min_date )\
             .filter( date_group<=max_date )\
             .filter( listFilter )
     results = {}
+    # Inner function transforms SELECT tuple into recognizable format
     _dictize = lambda x: {
         'posts':x[0],
         'subscribers':x[1],
         'timestamp':x[2].isoformat(),
     }
+    # Build output datastructure from rows
     for x in q:
         m = mailman[ x[3] ]
         results[m.name] = results.get(m.name, { 'mailman':m.toJson(), 'data':[] })
         results[m.name]['data'].append( _dictize(x) )
-    # Inner function transforms SELECT tuple into recognizable format
+    # Write response
     response['grain'] = grain
     response['data'] = results
     response['list'] = lists
