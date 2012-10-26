@@ -247,16 +247,20 @@ list    Comma seperated names of mailman lists.
             <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row16a" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
+                <span class="label label-important pull-right">Granular</span>
                 /api/1/history/twitter/account
                 </a></div>
                 <div class="accordion-body collapse" id="row16a"><div class="accordion-inner">
-                    <p class="description">Browse the history of an OKFN Twitter account. Snapshots the total <b><u>followers</u></b>, <b><u>following</u></b>, and <b><u>tweets</u></b> of each account.</p>
+                    <p class="description">Browse the history of OKFN Twitter account stats. Snapshots the total <b><u>followers</u></b>, <b><u>following</u></b>, and <b><u>tweets</u></b> of each account.</p>
+                    <div class="example"><a href="/api/1/history/twitter/account" title="Last 10 days of stats for all tracked Twiter accounts">/api/1/history/twitter/account</a></div>
                     <div class="example"><a href="/api/1/history/twitter/account?name=okfn" title="Last 10 days of stats for @okfn">/api/1/history/twitter/account?name=okfn</a></div>
+                    <div class="example"><a href="/api/1/history/twitter/account?name=okfn,reclinejs&grain=week" title="Last 10 weeks of stats for @okfn and @reclinejs">/api/1/history/twitter/account?name=okfn,reclinejs&grain=week</a></div>
                     <div class="example"><a href="/api/1/history/twitter/account?name=ckanproject&page=1&per_page=30" title="@ckanproject stats from last month">/api/1/history/twitter/account?name=ckanproject&page=1&per_page=30</a></div>
                     <pre style="font-size: 10px;">
-<b>REQUIRED Parameters</b>
-name    Account name to view the history of.
-        eg: ckanproject</pre>
+<b>Optional Parameters</b>
+name    Comma separated account name(s) to view.
+        eg: ckanproject
+        eg: okfn,reclinejs</pre>
                 </div></div>
             </div>
         </div>

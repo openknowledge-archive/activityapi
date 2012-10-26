@@ -288,17 +288,59 @@ def history__twitter_tweet():
 
 @endpoint('/history/twitter/account')
 def history__twitter_account():
-    accountname = request.args.get('name',None)
-    assert accountname is not None, 'Missing parameter: name (eg. ?name=okfn)'
-    account = Session.query(TwitterAccount).filter(TwitterAccount.screen_name==accountname).first()
-    assert account, 'Twitter account %s is not tracked by the database.' % account
-    q = Session.query(SnapshotOfTwitterAccount).filter(SnapshotOfTwitterAccount.screen_name==accountname)
-    response = _prepare( q.count() )
-    q = q.order_by(SnapshotOfTwitterAccount.timestamp.desc())\
-         .offset(response['offset'])\
-         .limit(response['per_page'])
-    response['data'] = [ x.toJson() for x in q ] 
-    response['account'] = account.toJson() 
+    grain = _get_grain()
+    accounts = { x.screen_name : x for x in Session.query(TwitterAccount) }
+    accountnames = request.args.get('name',None)
+    # Filter by account name
+    accountFilter = None
+    if accountnames is not None:
+        accountnames = accountnames.split(',')
+        for x in accountnames:
+            assert x in accounts, 'Twitter account is not tracked: %s' % x
+        accountFilter = SnapshotOfTwitterAccount.screen_name.in_(accountnames)
+    # Query: Range of dates
+    date_group = func.date_trunc(grain, SnapshotOfTwitterAccount.timestamp)
+    q1 = Session.query()\
+            .add_column( func.distinct(date_group).label('d') )\
+            .order_by(date_group.desc())
+    response = _prepare(q1.count())
+    q1 = q1.offset( response['offset'] )\
+            .limit( response['per_page'] )
+    if q1.count():
+        date_column = q1.subquery().columns.d
+        (min_date,max_date) = Session.query(func.min(date_column), func.max(date_column)).first()
+    else:
+        # Impossible date range
+        (min_date,max_date) = datetime.now()+timedelta(days=1),datetime.now()
+    # Grouped query
+    S = SnapshotOfTwitterAccount
+    q = Session.query()\
+            .add_column( func.max(S.followers) )\
+            .add_column( func.max(S.following) )\
+            .add_column( func.max(S.tweets) )\
+            .add_column( date_group )\
+            .add_column( S.screen_name )\
+            .group_by(date_group)\
+            .group_by(S.screen_name)\
+            .order_by(date_group.desc())\
+            .filter( date_group>=min_date )\
+            .filter( date_group<=max_date )\
+            .filter( accountFilter )
+    results = {}
+    _dictize = lambda x: {
+        'followers':x[0],
+        'following':x[1],
+        'tweets':x[2],
+        'timestamp':x[3].date().isoformat(),
+        'screen_name':x[4]
+    }
+    for x in q:
+        x = _dictize(x)
+        name = x['screen_name']
+        results[name] = results.get(name, { 'account':accounts[name].toJson(), 'data':[] })
+        results[name]['data'].append(x)
+    response['data'] = results
+    response['grain'] = grain
     return response
 
 @endpoint('/history/github')
