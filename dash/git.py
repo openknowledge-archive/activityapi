@@ -27,10 +27,13 @@ def save_repos(gh_repos, verbose=False):
             repo = Repo(v)
             Session.add(repo)
     # Delete
-    for repo in Session.query(Repo):
-        if not repo.full_name in gh_repos:
-            if verbose: print 'Deleting repo %s' % repo.full_name
-            Session.delete(repo)
+    # TODO: think about this - you can't just delete here as the repo you are
+    # deleting may be referenced from e.g. snapshot_repo
+    # either need cascade delete or do not delete ...
+    # for repo in Session.query(Repo):
+    #    if not repo.full_name in gh_repos:
+    #        if verbose: print 'Deleting repo %s' % repo.full_name
+    #        Session.delete(repo)
     # Commit now to ensure repo.id is auto-assigned
     Session.commit()
 
