@@ -56,6 +56,11 @@ def snapshot_repos(gh_repos, verbose=False):
                 if verbose: print ' -> most recent snapshots have already been processed.'
                 continue
             since = latest.timestamp + day
+        # as we have not deleted repos that no longer exist (see TODO above)
+        # we have to check whether this repo still actually exists
+        if not r.full_name in gh_repos:
+            if verbose: print 'Skipping repo as no longer exists ' + r.full_name
+            continue
         # Snapshot date for the last day (or more)
         gh_repo = gh_repos[ r.full_name ]
         while since <= until:
