@@ -475,6 +475,64 @@ def history__mailman():
     return response
 
 
+
+
+@endpoint('/history/mailchimp')
+def history__mailchimp():
+    grain = _get_grain()
+    # Filtered list of mailchimp names
+    lists = request.args.get('list')
+    listFilter = None
+    if lists is not None:
+        lists = lists.split(',')
+        listFilter = SnapshotOfMailchimp.name.in_(lists)
+    # Date filter
+    date_group = func.date_trunc(grain, SnapshotOfMailchimp.timestamp)
+    # Query: Range of dates
+    q1 = Session.query()\
+            .add_column( func.distinct(date_group).label('d') )\
+            .order_by(date_group.desc())
+    response = _prepare(q1.count())
+    q1 = q1.offset( response['offset'] )\
+            .limit( response['per_page'] )
+    if q1.count():
+        subquery = q1.subquery()
+        (min_date,max_date) = Session.query(func.min(subquery.columns.d), func.max(subquery.columns.d)).first()
+    else:
+        # Impossible date range
+        (min_date,max_date) = datetime.now()+timedelta(days=1),datetime.now()
+    # Grouped query
+    S = SnapshotOfMailchimp
+    q = Session.query()\
+            .add_column( func.max(S.members) )\
+            .add_column( date_group )\
+            .add_column( S.name )\
+            .group_by(date_group)\
+            .group_by(S.name)\
+            .order_by(date_group.desc())\
+            .filter( date_group>=min_date )\
+            .filter( date_group<=max_date )\
+            .filter( listFilter )
+    results = {}
+    # Inner function transforms SELECT tuple into recognizable format
+    _dictize = lambda x: {
+        'members':x[0],
+        'timestamp':x[1].isoformat(),
+    }
+    # Build output datastructure from rows
+    for x in q:
+        name = x[2]
+        results[name] = results.get(name, { 'name':name, 'data':[] })
+        results[name]['data'].append( _dictize(x) )
+    # Write response
+    response['grain'] = grain
+    response['data'] = results
+    response['list'] = lists
+    response['min_date'] = min_date.isoformat()
+    response['max_date'] = max_date.isoformat()
+    return response
+
+
 @endpoint('/history/buddypress')
 def history__buddypress():
     grain = _get_grain()
