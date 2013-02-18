@@ -115,6 +115,18 @@ class Mailman(Base):
                 'description': self.description,
                 }
 
+class SnapshotOfMailchimp(Base):
+    __tablename__='snapshot_mailchimp'
+    timestamp = Column(Date, primary_key=True) 
+    name = Column(String, primary_key=True)
+    members = Column(Integer)
+    def toJson(self):
+        return {
+            'timestamp': self.timestamp.isoformat(),
+            'name': self.name,
+            'members': self.members,
+        }
+
 class SnapshotOfMailman(Base):
     __tablename__='snapshot_mailman'
     mailman_id = Column(Integer, ForeignKey('mailman.id'), primary_key=True)
@@ -132,7 +144,6 @@ class SnapshotOfMailman(Base):
             'subscribers': self.subscribers,
             'posts_today': self.posts_today,
         }
-
 
 class SnapshotOfBuddypress(Base):
     __tablename__='snapshot_buddypress'
