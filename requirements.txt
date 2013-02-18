@@ -5,7 +5,7 @@ SQLAlchemy==0.7.2
 Werkzeug==0.8.3
 cssselect==0.7.1
 feedparser==5.1.2
-lxml==3.0alpha2
+lxml==3.0
 postmonkey==1.0a4
 psycopg2==2.4.2
 requests==0.13.5
