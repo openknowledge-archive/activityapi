@@ -524,6 +524,7 @@ def history__mailchimp():
         name = x[2]
         results[name] = results.get(name, { 'name':name, 'data':[] })
         results[name]['data'].append( _dictize(x) )
+        results[name]['members'] = Session.query(S).filter(S.name==name).order_by(S.timestamp.desc()).first().members
     # Write response
     response['grain'] = grain
     response['data'] = results
