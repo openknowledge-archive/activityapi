@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+import argparse
 from github import Github
 from lib.backend import Session
 from lib.backend.model import Repo, SnapshotOfRepo, Person, ActivityInGithub
@@ -102,3 +105,11 @@ def _scrape_user_events( user_id, gh_user, verbose=False ):
         Session.add( ActivityInGithub(user_id, x) )
         max -= 1
 
+
+if __name__=='__main__':
+    parser = argparse.ArgumentParser(description='Scrape Github for events and stats')
+    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='Verbose output')
+    arg = parser.parse_args()
+    repos = scrape_repos(verbose=arg.verbose) 
+    save_repos(repos, verbose=arg.verbose)
+    snapshot_repos(repos, verbose=arg.verbose)

@@ -120,6 +120,20 @@ class SnapshotOfMailman(Base):
             'posts_today': self.posts_today,
         }
 
+class SnapshotOfMailman2(Base):
+    __tablename__='snapshot_mailman2'
+    list_name = Column(String, primary_key=True)
+    timestamp = Column(Date, primary_key=True) 
+    subscribers = Column(Integer)
+    posts_today = Column(Integer)
+    def toJson(self):
+        return {
+            'list_name': self.list_name,
+            'timestamp': self.timestamp.isoformat(),
+            'subscribers': self.subscribers,
+            'posts_today': self.posts_today,
+        }
+
 class SnapshotOfTwitterAccount(Base):
     __tablename__='snapshot_twitteraccount'
     timestamp = Column(Date, primary_key=True) 
@@ -189,6 +203,25 @@ class ActivityInMailman(Base):
         self.email = email
         self.link = link
         self.timestamp = timestamp
+    def toJson(self):
+        return {
+            'message_id' : self.message_id,
+            'subject' : self.subject,
+            'author' : self.author,
+            'email' : self.email,
+            'link' : self.link,
+            'timestamp' : self.timestamp.isoformat(),
+        }
+
+class ActivityInMailman2(Base):
+    __tablename__='activity_mailman2'
+    listname  = Column(String, primary_key=True)
+    message_id = Column(Integer, primary_key=True)
+    subject = Column(String)
+    author = Column(String)
+    email = Column(String)
+    link = Column(String)
+    timestamp = Column(DateTime)
     def toJson(self):
         return {
             'message_id' : self.message_id,
