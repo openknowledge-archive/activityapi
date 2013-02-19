@@ -69,16 +69,6 @@ def index():
 ##################################################
 ####           URLS: /data/...
 ##################################################
-@endpoint('/data/timestamp')
-def data__timestamp():
-    response = _prepare( Session.query(Timestamp).count() )
-    q = Session.query(Timestamp)\
-            .order_by(Timestamp.id.desc())\
-            .offset(response['offset'])\
-            .limit(response['per_page'])
-    response['data'] = [ {'id':x.id,'now':x.now} for x in q ] 
-    return response
-
 @endpoint('/data/github')
 def data__github():
     """Unpaginated -- there are less than 200 entries in the database"""

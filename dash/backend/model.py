@@ -5,15 +5,6 @@ import json
 
 Base = declarative_base(bind=engine)
 
-class Timestamp(Base):
-    __tablename__='timestamp'
-    id = Column(Integer, primary_key=True)
-    now = Column(String)
-    def __init__(self, now):
-        self.now = now
-    def __repr__(self):
-        return "<Ts('%s')>" % (self.now)
-
 class Repo(Base):
     __tablename__='repo'
     id = Column(Integer, primary_key=True)
