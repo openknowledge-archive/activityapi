@@ -26,12 +26,8 @@ http://activityapi.herokuapp.com
 
 #### Run the Twitter scraper
 
-    # The scraper connects to my account(z_cron) which maintains Twitter lists of all OKFN members.
-    # You'll need to get the credentials and store them in environment variables.
-    export TWITTER_CONSUMER_SECRET=b1946ac9...
-    export TWITTER_ACCESS_TOKEN_SECRET=591785b...
-    
-    # You can then run the scraper:
+    # Grab a daily snapshot of twitter statistics for our accounts.
+    # The account list is coded into the script.
     ./scrape_twitter.py --verbose
 
 #### Run the Buddypress scraper

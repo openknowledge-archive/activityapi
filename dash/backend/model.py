@@ -149,12 +149,6 @@ class SnapshotOfTwitterAccount(Base):
     followers = Column(Integer)
     following = Column(Integer)
     tweets = Column(Integer)
-    def __init__(self,timestamp,screen_name,followers,following,tweets):
-        self.timestamp = timestamp
-        self.screen_name = screen_name
-        self.followers = followers
-        self.following = following
-        self.tweets = tweets
     def toJson(self):
         return {
             'timestamp': self.timestamp.isoformat(),
