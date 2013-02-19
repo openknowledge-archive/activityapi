@@ -137,24 +137,6 @@ list    Comma seperated names of mailman lists.
                 </div></div>
             </div>
             <div class="accordion-group">
-                <div class="accordion-heading"><a href="#row7" class="accordion-toggle" data-toggle="collapse">
-                <span class="label label-info pull-right">Paginated</span>
-                /api/1/data/person
-                </a></div>
-                <div class="accordion-body collapse" id="row7"><div class="accordion-inner">
-<p class="description">List the people that the backend is tracking. Produces a list of standard <b><u>person</b></u> objects. The source is the <a href="http://okfn.org/members">Buddypress user database</a>.</p>
-<div class="example"><a href="/api/1/data/person" title="List of OKFN members">/api/1/data/person</a></div>
-<div class="example"><a href="/api/1/data/person?opinion=staff" title="List of OKFN staff members">/api/1/data/person?opinion=staff</a></div>
-<div class="example"><a href="/api/1/data/person?login=zephod" title="Get Tom's user account">/api/1/data/person?login=zephod</a></div>
-                        <pre style="font-size: 10px;">
-<b>Optional Parameters</b>
-opinion   Filter by opinion label in database.
-          eg. 'staff'
-login     Comma-seperated list of logins to target
-          eg. 'rgrp,zephod'</pre>
-                </div></div>
-            </div>
-            <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row8" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
                 /api/1/data/timestamp
@@ -199,19 +181,6 @@ repo    Comma seperated names of Github repositories.
 <b>Optional Parameters</b>
 list    Comma seperated names of mailman lists.
         eg: ckan-dev,ckan-discuss</pre>
-                </div></div>
-            </div>
-            <div class="accordion-group">
-                <div class="accordion-heading"><a href="#row11" class="accordion-toggle" data-toggle="collapse">
-                <span class="label label-info pull-right">Paginated</span>
-                <span class="label label-important pull-right">Granular</span>
-                /api/1/history/buddypress
-                </a></div>
-                <div class="accordion-body collapse" id="row11"><div class="accordion-inner">
-                    <p class="description">Browse the history of our Buddypress membership numbers (snapshots of <b><u>num_users</u></b> every day since the site began.</p>
-                    <div class="example"><a href="/api/1/history/buddypress" title="Last 10 days of user counts">/api/1/history/buddypress</a></div>
-                    <div class="example"><a href="/api/1/history/buddypress?grain=week" title="Last 10 weeks of user counts">/api/1/history/buddypress?grain=week</a></div>
-                    <div class="example"><a href="/api/1/history/buddypress?grain=month&per_page=12" title="Last 12 months of user counts">/api/1/history/buddypress?grain=month&per_page=12</a></div>
                 </div></div>
             </div>
             <div class="accordion-group">

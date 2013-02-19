@@ -129,19 +129,6 @@ class SnapshotOfMailman(Base):
             'posts_today': self.posts_today,
         }
 
-class SnapshotOfBuddypress(Base):
-    __tablename__='snapshot_buddypress'
-    timestamp = Column(Date, primary_key=True) 
-    num_users = Column(Integer)
-    def __init__(self, timestamp, num_users):
-        self.timestamp = timestamp
-        self.num_users = num_users
-    def toJson(self):
-        return {
-            'timestamp': self.timestamp.isoformat(),
-            'num_users': self.num_users
-        }
-
 class SnapshotOfTwitterAccount(Base):
     __tablename__='snapshot_twitteraccount'
     timestamp = Column(Date, primary_key=True) 
@@ -193,39 +180,6 @@ class Person(Base):
         out = { x:self.__getattribute__(x) for x in fields }
         out['registered'] = self.registered.isoformat()
         return out
-
-class ActivityInBuddypress(Base):
-    __tablename__='activity_buddypress'
-    id = Column(Integer, primary_key=True)
-    login = Column(String)
-    type = Column(String)
-    timestamp = Column(DateTime)
-    timestamp_string = Column(String)
-    json = Column(String)
-    def __init__(self, type, person, metadata={}, timestamp=None):
-        if not timestamp:
-            import datetime
-            timestamp = datetime.datetime.now()
-        self.login = person.login
-        self.timestamp = timestamp
-        self.type = type
-        metadata['display_name'] = person.display_name
-        self.json = json.dumps(metadata)
-    def __repr__(self):
-        if self.type=='add':
-            return 'Added new user %s' % self.login
-        if self.type=='delete':
-            return 'Deleted user %s' % self.login
-        if self.type=='update':
-            return 'User %s updated profile (json=%s)' % (self.login, self.json[:50])
-        return 'ActivityInBuddypress (type=%s login=%s)' % (self.type,self.login)
-    def toJson(self):
-        return {
-            'login':self.login,
-            'type':self.type,
-            'timestamp':self.timestamp.isoformat(),
-            'json':self.json,
-        }
 
 class ActivityInMailman(Base):
     __tablename__='activity_mailman'

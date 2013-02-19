@@ -142,16 +142,6 @@ def _activitydict_mailman(act,mailman,person):
     out['_activity_type'] = 'mailman'
     return out
 
-def _activityquery_buddypress():
-    return Session.query(ActivityInBuddypress,Person)\
-            .order_by(ActivityInBuddypress.timestamp.desc())\
-            .filter(Person.login==ActivityInBuddypress.login)
-def _activitydict_buddypress(act,person):
-    out = act.toJson()
-    out['person'] = person.toJson()
-    out['_activity_type'] = 'buddypress'
-    return out
-
 @endpoint('/activity/github')
 def activity__github():
     select_repos = request.args.get('repo',None)
@@ -186,7 +176,7 @@ def activity__mailman():
 @endpoint('/stream')
 def stream():
     # Facet by types
-    types=['buddypress','github','mailman']
+    types=['github','mailman']
     _types = request.args.get('type',None)
     if _types is not None:
         _types = _types.split(',')
@@ -220,9 +210,6 @@ def stream():
     if 'mailman' in types:
         q = _activityquery_mailman().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(ActivityInMailman) )
         results += [ _activitydict_mailman(x,y,z) for x,y,z in q ]
-    if 'buddypress' in types:
-        q = _activityquery_buddypress().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(ActivityInBuddypress) )
-        results += [ _activitydict_buddypress(x,y) for x,y in q ]
     results = sorted(results, key = lambda x : x['timestamp'],reverse=True)
     # Construct a results object 
     response = { 'ok': True }
@@ -527,29 +514,6 @@ def history__mailchimp():
     response['max_date'] = max_date.isoformat()
     return response
 
-
-@endpoint('/history/buddypress')
-def history__buddypress():
-    grain = _get_grain()
-    date_group = func.date_trunc(grain, SnapshotOfBuddypress.timestamp)
-    # Count the results
-    response = _prepare()
-    # Execute the query
-    stmt = select([ date_group,\
-                    func.max(SnapshotOfBuddypress.num_users)])\
-            .group_by(date_group)\
-            .order_by(date_group.desc())\
-            .offset(response['offset'])\
-            .limit(response['per_page'])
-    q = engine.execute(stmt)
-    # Inner function transforms SELECT tuple into recognizable format
-    _dictize = lambda x: {
-        'timestamp':x[0].date().isoformat(),
-        'num_users':x[1],
-    }
-    response['data'] = [ _dictize(x) for x in q ] 
-    response['grain'] = grain
-    return response
 
 
 ##################################################

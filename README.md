@@ -30,15 +30,6 @@ http://activityapi.herokuapp.com
     # The account list is coded into the script.
     ./scrape_twitter.py --verbose
 
-#### Run the Buddypress scraper
-
-    # The scraper connects to a Wordpress plugin running on our Wordpress/Buddypress/MySQL servers.
-    # You'll need to get the auth key and store it in an environment variable.
-    export BUDDYPRESS_AUTH_HASH='$P$B8Bqng....
-
-    # You can then run the scraper
-    ./scrape_buddypress.py --verbose
-
 #### Run the Github scraper
 
     # The scraper connects to the public Github API to download user activity.
