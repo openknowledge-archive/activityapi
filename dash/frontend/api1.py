@@ -161,26 +161,6 @@ def _activitydict_buddypress(act,person):
     out['person'] = person.toJson()
     out['_activity_type'] = 'buddypress'
     return out
-    
-def _activityquery_twitter_tweets():
-    return Session.query(Tweet,Person)\
-            .order_by(Tweet.timestamp.desc())\
-            .filter(Person.twitter==Tweet.screen_name)
-def _activitydict_twitter_tweets(act,person):
-    out = act.toJson()
-    out['person'] = person.toJson()
-    out['_activity_type'] = 'twitter'
-    return out
-    
-
-@endpoint('/activity/twitter/tweet')
-def activity__twitter_tweet():
-    q = _activityquery_twitter_tweets()
-    response = _prepare( q.count() )
-    q = q.offset(response['offset'])\
-            .limit(response['per_page'])
-    response['data'] = [ _activitydict_twitter_tweets(x,y) for x,y in q ]
-    return response
 
 @endpoint('/activity/github')
 def activity__github():
@@ -216,7 +196,7 @@ def activity__mailman():
 @endpoint('/stream')
 def stream():
     # Facet by types
-    types=['buddypress','github','twitter','mailman']
+    types=['buddypress','github','mailman']
     _types = request.args.get('type',None)
     if _types is not None:
         _types = _types.split(',')
@@ -253,9 +233,6 @@ def stream():
     if 'buddypress' in types:
         q = _activityquery_buddypress().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(ActivityInBuddypress) )
         results += [ _activitydict_buddypress(x,y) for x,y in q ]
-    if 'twitter' in types:
-        q = _activityquery_twitter_tweets().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(Tweet) )
-        results += [ _activitydict_twitter_tweets(x,y) for x,y in q ]
     results = sorted(results, key = lambda x : x['timestamp'],reverse=True)
     # Construct a results object 
     response = { 'ok': True }
@@ -276,16 +253,6 @@ def stream():
 ##################################################
 ####           URLS: /history/...
 ##################################################
-@endpoint('/history/twitter/tweet')
-def history__twitter_tweet():
-    response = _prepare( Session.query(SnapshotOfTwitter).count() )
-    q = Session.query(SnapshotOfTwitter)\
-            .order_by(SnapshotOfTwitter.timestamp.desc())\
-            .offset(response['offset'])\
-            .limit(response['per_page'])
-    response['data'] = [ x.toJson() for x in q ] 
-    return response
-
 @endpoint('/history/twitter/account')
 def history__twitter_account():
     grain = _get_grain()
@@ -591,12 +558,6 @@ def history__buddypress():
 ##################################################
 ####           URLS: /debug/...
 ##################################################
-@endpoint('/debug/twitter_ratelimit')
-def debug__twitter_ratelimit():
-    import dash.twitter
-    api = dash.twitter._connect()
-    return api.rate_limit_status()
-
 
 @endpoint('/debug/request')
 def debug__request():

@@ -114,16 +114,6 @@ list    Comma seperated names of mailman lists.
         eg: ckan-dev,ckan-discuss</pre>
                 </div></div>
             </div>
-            <div class="accordion-group">
-                <div class="accordion-heading"><a href="#row4" class="accordion-toggle" data-toggle="collapse">
-                <span class="label label-info pull-right">Paginated</span>
-                /api/1/activity/twitter/tweet
-                </a></div>
-                <div class="accordion-body collapse" id="row4"><div class="accordion-inner">
-<p class="description">Stream of tweets created by members of the OKFN's user database (where they have filled out the <u>twitter</u> field on <a href="http://okfn.org">okfn.org</a>). Each tweet event contains a standard <b><u>person</u></b> object.</p>
-<div class="example"><a href="/api/1/activity/twitter/tweet" title="All tweets from OKFN members">/api/1/activity/twitter/tweet</a></div>
-                </div></div>
-            </div>
         </div>
         <h4>Data</h4>
         <div class="accordion">
@@ -234,17 +224,6 @@ list    Comma seperated names of mailman lists.
                 </div></div>
             </div>
             <div class="accordion-group">
-                <div class="accordion-heading"><a href="#row16" class="accordion-toggle" data-toggle="collapse">
-                <span class="label label-info pull-right">Paginated</span>
-                /api/1/history/twitter/tweet
-                </a></div>
-                <div class="accordion-body collapse" id="row16"><div class="accordion-inner">
-                    <p class="description">Browse the history of Twitter statistical analysis. This counts the number of <b><u>tweets_today</u></b>, and lists the 20 most active <b><u>authors</u></b>, and the 20 most frequently mentioned <b><u>links</u></b>, <b><u>hashtags</u></b> and <b><u>words</u></b>.</p>
-                    <div class="example"><a href="/api/1/history/twitter/tweet" title="Last 10 days of analysis">/api/1/history/twitter/tweet</a></div>
-                    <div class="example"><a href="/api/1/history/twitter/tweet?page=1&per_page=30" title="Analysis from one month ago (approx)">/api/1/history/twitter/tweet?page=1&per_page=30</a></div>
-                </div></div>
-            </div>
-            <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row16a" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
                 <span class="label label-important pull-right">Granular</span>
@@ -264,19 +243,6 @@ name    Comma separated account name(s) to view.
                 </div></div>
             </div>
         </div>
-        <h4>Debug</h4>
-        <div class="accordion">
-            <div class="accordion-group">
-                <div class="accordion-heading"><a href="#row10" class="accordion-toggle" data-toggle="collapse">
-                /api/1/debug/twitter_ratelimit
-                </a></div>
-                <div class="accordion-body collapse" id="row10"><div class="accordion-inner">
-                    <p class="description">How many Twitter API hits can the Activity server make in the next hour?</p>
-                    <div class="example"><a href="/api/1/debug/twitter_ratelimit" title="Twitter API rate limit check">/api/1/debug/twitter_ratelimit</a></div>
-                </div></div>
-            </div>
-        </div>
-
         <footer>
           <p>The Activity API runs on <a href="http://www.heroku.com/">Heroku</a> cloud servers.</p>
           <p>Its architecture consists of a front-end dyno running a <a href="http://flask.pocoo.org/">Flask</a> webserver, with multiple scheduled worker threads maintaining a <a href="http://www.postgresql.org/">PostgreSQL</a> database.</p>
