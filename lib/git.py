@@ -1,6 +1,6 @@
 from github import Github
-from dash.backend import Session
-from dash.backend.model import Repo, SnapshotOfRepo, Person, ActivityInGithub
+from lib.backend import Session
+from lib.backend.model import Repo, SnapshotOfRepo, Person, ActivityInGithub
 from datetime import datetime,timedelta
 
 def scrape_repos(verbose=False):

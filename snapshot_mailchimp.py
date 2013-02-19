@@ -5,7 +5,7 @@ import os
 from postmonkey import PostMonkey
 from pprint import pprint
 from datetime import datetime,timedelta
-from dash.backend import Session, model
+from lib.backend import Session, model
 
 def snapshot_mailchimp(verbose=False):
     api_key = os.environ.get('MAILCHIMP_API_KEY')

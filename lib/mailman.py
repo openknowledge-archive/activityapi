@@ -1,8 +1,8 @@
 from lxml import html
 import requests
 import os
-from dash.backend import Session
-from dash.backend.model import Mailman, SnapshotOfMailman, ActivityInMailman
+from lib.backend import Session
+from lib.backend.model import Mailman, SnapshotOfMailman, ActivityInMailman
 from datetime import datetime,timedelta
 from StringIO import StringIO
 from gzip import GzipFile

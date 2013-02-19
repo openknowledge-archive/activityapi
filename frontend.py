@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-from dash.frontend import app
+from lib.frontend import app
 
 if __name__ == '__main__':
    port = int(os.environ.get('PORT', 5000))

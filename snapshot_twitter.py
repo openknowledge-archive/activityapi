@@ -4,8 +4,8 @@ import argparse
 import tweepy
 import os
 import re
-from dash.backend import Session
-from dash.backend.model import SnapshotOfTwitterAccount
+from lib.backend import Session
+from lib.backend.model import SnapshotOfTwitterAccount
 from sqlalchemy import func
 from datetime import datetime,timedelta
 

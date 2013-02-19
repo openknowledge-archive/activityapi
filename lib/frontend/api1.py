@@ -1,6 +1,6 @@
-from dash.frontend import app
-from dash.backend import Session
-from dash.backend.model import *
+from lib.frontend import app
+from lib.backend import Session
+from lib.backend.model import *
 from flask import request, make_response
 from datetime import datetime,timedelta
 import json

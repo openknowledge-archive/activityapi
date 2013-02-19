@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from dash import mailman
+from lib import mailman
 import argparse
 
 def main():

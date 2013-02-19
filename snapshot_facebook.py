@@ -5,7 +5,7 @@ import os
 import facebook
 from pprint import pprint
 from datetime import datetime,timedelta
-from dash.backend import Session, model
+from lib.backend import Session, model
 
 def snapshot_facebook(verbose=False):
     api = facebook.GraphAPI()

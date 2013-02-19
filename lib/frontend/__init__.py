@@ -1,8 +1,8 @@
 from flask import Flask,request,make_response
 import json
 
-app = Flask('dash.frontend')
-app.config.from_object('dash.frontend.settings')
+app = Flask('lib.frontend')
+app.config.from_object('lib.frontend.settings')
 
 @app.route('/')
 def homepage():

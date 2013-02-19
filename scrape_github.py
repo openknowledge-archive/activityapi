@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from dash import git
+from lib import git
 import argparse
 
 def main():
