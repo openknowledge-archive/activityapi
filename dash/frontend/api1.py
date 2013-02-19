@@ -589,24 +589,6 @@ def history__buddypress():
 
 
 ##################################################
-####           URLS: /write/...
-##################################################
-def person_set_opinion():
-    # TODO (securely) write__person
-    login = request.values.get('login')
-    opinion = request.values.get('opinion')
-    assert login 
-    assert opinion
-    q = Session.query(Person).filter(Person.login==login).update({Person._opinion:opinion})
-    Session.commit()
-    return {
-        'ok': q>0,
-        'login': login,
-        'opinion': opinion,
-        'updated':q
-    }
-
-##################################################
 ####           URLS: /debug/...
 ##################################################
 @endpoint('/debug/twitter_ratelimit')
