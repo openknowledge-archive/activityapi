@@ -60,14 +60,14 @@ eg: <b>?grain=day</b> returns 7 times as many results as <b>?grain=week</b>.</pr
                 /api/1/stream
                 </a></div>
                 <div class="accordion-body collapse" id="row17"><div class="accordion-inner">
-<p class="description">Stream of activity from the last four hours. Each item comes with a standard <b><u>person</u></b> object and an <b><u>_activity_type</u></b> field, which could be <u>'buddypress'</u>,<u>'twitter'</u>,<u>'github'</u> or <u>'mailman'</u>.</p>
+<p class="description">Stream of activity from the last four hours. Each item comes with a standard <b><u>person</u></b> object and an <b><u>_activity_type</u></b> field, which could be <u>'github'</u> or <u>'mailman'</u>.</p>
 <div class="example"><a href="/api/1/stream" title="All user activity">/api/1/stream</a></div>
 <div class="example"><a href="/api/1/stream?opinion=staff" title="Staff activity stream">/api/1/stream?opinion=staff</a></div>
 <div class="example"><a href="/api/1/stream?login=zephod,rgrp&days=7" title="Tom & Rufus' activity from the last 7 days">/api/1/stream?login=zephod,rgrp&days=7</a></div>
                         <pre style="font-size: 10px;">
 <b>Optional Parameters</b>
 type       Comma seperated activity types.
-           default: buddypress,twitter,github,mailman
+           default: github,mailman
 login      Comma seperated user logins.
            eg. zephod,rgrp
 opinion    Select only users with the given <b>opinion</b>
@@ -155,15 +155,6 @@ login     Comma-seperated list of logins to target
                 </div></div>
             </div>
             <div class="accordion-group">
-                <div class="accordion-heading"><a href="#row8a" class="accordion-toggle" data-toggle="collapse">
-                /api/1/data/twitter/account
-                </a></div>
-                <div class="accordion-body collapse" id="row8a"><div class="accordion-inner">
-                    <p class="description">List the OKFN Twitter accounts we are tracking, as well as their current total <b><u>tweets</u></b>, <b><u>followers</u></b>, <b><u>following</u></b>, and their <b><u>description</u></b> and canonical <b><u>name</u></b></p>
-                    <div class="example"><a href="/api/1/data/twitter/account" title="List of OKFN Twitter accounts">/api/1/data/twitter/account</a></div>
-                </div></div>
-            </div>
-            <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row8" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
                 /api/1/data/timestamp
@@ -227,14 +218,14 @@ list    Comma seperated names of mailman lists.
                 <div class="accordion-heading"><a href="#row16a" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
                 <span class="label label-important pull-right">Granular</span>
-                /api/1/history/twitter/account
+                /api/1/history/twitter
                 </a></div>
                 <div class="accordion-body collapse" id="row16a"><div class="accordion-inner">
                     <p class="description">Browse the history of OKFN Twitter account stats. Snapshots the total <b><u>followers</u></b>, <b><u>following</u></b>, and <b><u>tweets</u></b> of each account.</p>
-                    <div class="example"><a href="/api/1/history/twitter/account" title="Last 10 days of stats for all tracked Twiter accounts">/api/1/history/twitter/account</a></div>
-                    <div class="example"><a href="/api/1/history/twitter/account?name=okfn" title="Last 10 days of stats for @okfn">/api/1/history/twitter/account?name=okfn</a></div>
-                    <div class="example"><a href="/api/1/history/twitter/account?name=okfn,reclinejs&grain=week" title="Last 10 weeks of stats for @okfn and @reclinejs">/api/1/history/twitter/account?name=okfn,reclinejs&grain=week</a></div>
-                    <div class="example"><a href="/api/1/history/twitter/account?name=ckanproject&page=1&per_page=30" title="@ckanproject stats from last month">/api/1/history/twitter/account?name=ckanproject&page=1&per_page=30</a></div>
+                    <div class="example"><a href="/api/1/history/twitter" title="Last 10 days of stats for all tracked Twiter accounts">/api/1/history/twitter</a></div>
+                    <div class="example"><a href="/api/1/history/twitter?name=okfn" title="Last 10 days of stats for @okfn">/api/1/history/twitter?name=okfn</a></div>
+                    <div class="example"><a href="/api/1/history/twitter?name=okfn,reclinejs&grain=week" title="Last 10 weeks of stats for @okfn and @reclinejs">/api/1/history/twitter?name=okfn,reclinejs&grain=week</a></div>
+                    <div class="example"><a href="/api/1/history/twitter?name=ckanproject&page=1&per_page=30" title="@ckanproject stats from last month">/api/1/history/twitter?name=ckanproject&page=1&per_page=30</a></div>
                     <pre style="font-size: 10px;">
 <b>Optional Parameters</b>
 name    Comma separated account name(s) to view.

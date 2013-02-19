@@ -114,16 +114,6 @@ def data__person():
     response['data'] = [ person.toJson() for person in q ] 
     return response
 
-@endpoint('/data/twitter/account')
-def data__twitter_account():
-    """Unpaginated -- there are only a handful of rows in the database"""
-    response = {'ok' : True}
-    q = Session.query(TwitterAccount).order_by(TwitterAccount.screen_name)
-    response['data'] = { x.screen_name :  x.toJson() for x in q }
-    response['total'] = q.count()
-    return response
-
-
 
 ##################################################
 ####           URLS: /activity/...
@@ -253,17 +243,14 @@ def stream():
 ##################################################
 ####           URLS: /history/...
 ##################################################
-@endpoint('/history/twitter/account')
-def history__twitter_account():
+@endpoint('/history/twitter')
+def history__twitter():
     grain = _get_grain()
-    accounts = { x.screen_name : x for x in Session.query(TwitterAccount) }
     accountnames = request.args.get('name',None)
     # Filter by account name
     accountFilter = None
     if accountnames is not None:
         accountnames = accountnames.split(',')
-        for x in accountnames:
-            assert x in accounts, 'Twitter account is not tracked: %s' % x
         accountFilter = SnapshotOfTwitterAccount.screen_name.in_(accountnames)
     # Query: Range of dates
     date_group = func.date_trunc(grain, SnapshotOfTwitterAccount.timestamp)
@@ -304,7 +291,17 @@ def history__twitter_account():
     for x in q:
         x = _dictize(x)
         name = x['screen_name']
-        results[name] = results.get(name, { 'account':accounts[name].toJson(), 'data':[] })
+        if not (name in results):
+            latest = Session.query(S).order_by(S.timestamp.desc()).first()
+            results[name] = { 
+                    'account':{
+                        'screen_name':name,
+                        'followers':latest.followers,
+                        'following':latest.following,
+                        'tweets':latest.tweets,
+                    },
+                    'data':[] 
+            }
         results[name]['data'].append(x)
     response['data'] = results
     response['grain'] = grain

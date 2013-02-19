@@ -159,26 +159,6 @@ class SnapshotOfTwitterAccount(Base):
         }
 
 
-class TwitterAccount(Base):
-    __tablename__='twitteraccount'
-    screen_name = Column(String, primary_key=True)
-    followers = Column(Integer)
-    following = Column(Integer)
-    tweets = Column(Integer)
-    name = Column(String)
-    description = Column(String)
-    def __init__(self,screen_name):
-        self.screen_name = screen_name
-    def toJson(self):
-        return {
-                'screen_name': self.screen_name,
-                'followers': self.followers,
-                'following': self.following,
-                'tweets': self.tweets,
-                'name': self.name,
-                'description': self.description,
-                }
-
 class Person(Base):
     __tablename__='person'
     id = Column(Integer, primary_key=True)

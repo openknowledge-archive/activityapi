@@ -5,7 +5,7 @@ import tweepy
 import os
 import re
 from dash.backend import Session
-from dash.backend.model import TwitterAccount,SnapshotOfTwitterAccount
+from dash.backend.model import SnapshotOfTwitterAccount
 from sqlalchemy import func
 from datetime import datetime,timedelta
 
