@@ -115,6 +115,16 @@ class Mailman(Base):
                 'description': self.description,
                 }
 
+class SnapshotOfFacebook(Base):
+    __tablename__='snapshot_facebook'
+    timestamp = Column(Date, primary_key=True) 
+    likes = Column(Integer)
+    def toJson(self):
+        return {
+            'timestamp': self.timestamp.isoformat(),
+            'likes': self.likes,
+        }
+
 class SnapshotOfMailchimp(Base):
     __tablename__='snapshot_mailchimp'
     timestamp = Column(Date, primary_key=True) 
