@@ -430,7 +430,10 @@ def history__facebook():
         'timestamp':x[0].isoformat(),
         'likes':x[1]
     }
-    results = [ _dictize(x) for x in q ]
+    results = {
+            'history': [ _dictize(x) for x in q ],
+            'likes' : Session.query(S).order_by(S.timestamp.desc()).first().likes
+            }
     # Write response
     response['grain'] = grain
     response['data'] = results
