@@ -410,6 +410,33 @@ def history__github():
     return response
 
 
+@endpoint('/history/facebook')
+def history__facebook():
+    grain = _get_grain()
+    # Date filter
+    date_group = func.date_trunc(grain, SnapshotOfFacebook.timestamp)
+    # Grouped query
+    S = SnapshotOfFacebook
+    q = Session.query()\
+            .add_column( date_group )\
+            .add_column( func.max(S.likes) )\
+            .group_by(date_group)\
+            .order_by(date_group.desc())
+    response = _prepare(q.count())
+    q = q.offset( response['offset'] )\
+          .limit( response['per_page'] )
+    # Inner function transforms SELECT tuple into recognizable format
+    _dictize = lambda x: {
+        'timestamp':x[0].isoformat(),
+        'likes':x[1]
+    }
+    results = [ _dictize(x) for x in q ]
+    # Write response
+    response['grain'] = grain
+    response['data'] = results
+    return response
+
+
 @endpoint('/history/mailman')
 def history__mailman():
     grain = _get_grain()
