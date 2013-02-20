@@ -75,6 +75,17 @@ class SnapshotOfTwitterAccount(Base):
             'tweets': self.tweets
         }
 
+class SnapshotOfAnalytics(Base):
+    __tablename__='snapshot_analytics'
+    timestamp = Column(Date, primary_key=True) 
+    website = Column(String, primary_key=True)
+    hits = Column(Integer)
+    def toJson(self):
+        return {
+            'timestamp': self.timestamp.isoformat(),
+            'hits': self.hits,
+        }
+
 class ActivityInMailman(Base):
     __tablename__='activity_mailman'
     list_name  = Column(String, primary_key=True)
