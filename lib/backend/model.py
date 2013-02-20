@@ -61,7 +61,7 @@ class SnapshotOfRepo(Base):
         }
 
 class SnapshotOfGithub(Base):
-    __tablename__='snapshot_github'
+    __tablename__='snapshot_github2'
     repo_name = Column(String,primary_key=True)
     timestamp = Column(Date, primary_key=True) 
     open_issues = Column(Integer)

@@ -6,7 +6,7 @@ from lib.backend import Session
 from lib.backend.model import Repo, SnapshotOfRepo, Person, ActivityInGithub
 from datetime import datetime,timedelta
 
-def scrape_repos(verbose=False):
+def _get_repo_list(verbose=False):
     if verbose: print 'Connecting to GitHub...'
     gh = Github()
     if verbose: print 'Fetching profile for "okfn"...'
@@ -17,39 +17,17 @@ def scrape_repos(verbose=False):
     assert len(out) > 0, 'Wont proceed without receiving some repos from server.'
     return out
 
-def save_repos(gh_repos, verbose=False):
-    """Update the 'repo' table"""
-    # Add and update
-    for k,v in gh_repos.items():
-        # v is a dict of a 'repo' (from our ORM) and a 'gh_repo' (from the library)
-        repo = Session.query(Repo).filter(Repo.full_name==k).first()
-        if repo:
-            repo.update(v)
-        else:
-            if verbose: print 'Adding new repo %s' % v.full_name
-            repo = Repo(v)
-            Session.add(repo)
-    # Delete
-    # TODO: think about this - you can't just delete here as the repo you are
-    # deleting may be referenced from e.g. snapshot_repo
-    # either need cascade delete or do not delete ...
-    # for repo in Session.query(Repo):
-    #    if not repo.full_name in gh_repos:
-    #        if verbose: print 'Deleting repo %s' % repo.full_name
-    #        Session.delete(repo)
-    # Commit now to ensure repo.id is auto-assigned
-    Session.commit()
-
-def snapshot_repos(gh_repos, verbose=False):
+def snapshot_repos(verbose=False):
     """Create SnapshotOfRepo objects in the database for 
        every day since the last time this was run."""
+    repo_list = _get_repo_list(verbose)
     day = timedelta(days=1)
     today = datetime.now().date()
     until = today - day
-    for r in Session.query(Repo):
-        if verbose: print 'Processing snapshots for %s...' % r.full_name
+    for (repo_name,repo) in repo_list:
+        if verbose: print 'Processing snapshots for %s...' % r.repo
         latest = Session.query(SnapshotOfRepo)\
-                .filter(SnapshotOfRepo.repo_id==r.id)\
+                .filter(SnapshotOfRepo.repo_name==r.id)\
                 .order_by(SnapshotOfRepo.timestamp.desc())\
                 .first()
         # By default, gather 30 days of snapshots
@@ -110,6 +88,4 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Scrape Github for events and stats')
     parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='Verbose output')
     arg = parser.parse_args()
-    repos = scrape_repos(verbose=arg.verbose) 
-    save_repos(repos, verbose=arg.verbose)
-    snapshot_repos(repos, verbose=arg.verbose)
+    snapshot_repos(verbose=arg.verbose)
