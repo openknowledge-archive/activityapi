@@ -60,6 +60,23 @@ class SnapshotOfRepo(Base):
             'forks': self.forks ,
         }
 
+class SnapshotOfGithub(Base):
+    __tablename__='snapshot_github'
+    repo_name = Column(String,primary_key=True)
+    timestamp = Column(Date, primary_key=True) 
+    open_issues = Column(Integer)
+    size = Column(Integer)
+    watchers = Column(Integer)
+    forks = Column(Integer)
+    def toJson(self):
+        return {
+            'timestamp': self.timestamp.isoformat(),
+            'open_issues': self.open_issues,
+            'size': self.size,
+            'watchers': self.watchers,
+            'forks': self.forks ,
+        }
+
 
 class SnapshotOfFacebook(Base):
     __tablename__='snapshot_facebook'
