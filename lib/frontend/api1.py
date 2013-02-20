@@ -73,8 +73,8 @@ def index():
 def data__github():
     """Unpaginated -- there are less than 200 entries in the database"""
     response = {'ok' : True}
-    q = Session.query(Repo).order_by(Repo.full_name)
-    response['data'] = [ x.toJson() for x in q ]
+    q = Session.query(SnapshotOfGithub.repo_name).distinct().order_by(SnapshotOfGithub.repo_name)
+    response['data'] = [ x[0] for x in q ]
     response['total'] = q.count()
     return response
 
@@ -82,7 +82,7 @@ def data__github():
 def data__mailman():
     """Unpaginated -- there are less than 200 entries in the database"""
     response = {'ok' : True}
-    q = Session.query(SnapshotOfMailman.list_name).distinct()
+    q = Session.query(SnapshotOfMailman.list_name).distinct().order_by(SnapshotOfMailman.list_name)
     response['data'] = [ x[0] for x in q ]
     response['total'] = q.count()
     return response
@@ -174,21 +174,14 @@ def history__twitter():
 @endpoint('/history/github')
 def history__github():
     grain = _get_grain()
-    # Map of github entries
-    github = { x.id : x for x in Session.query(Repo) }
     # Filtered list of github IDs
     repo = request.args.get('repo', None)
     repoFilter = None
     if repo is not None:
         repo = repo.split(',')
-        ids = []
-        for name in repo:
-            m = filter(lambda x:x.full_name==name, github.values())
-            assert m,'Repository %s does not exist' % name
-            ids.append(m[0].id)
-        repoFilter = SnapshotOfRepo.repo_id.in_(ids)
+        repoFilter = SnapshotOfGithub.repo_name.in_(repo)
     # Date filter
-    date_group = func.date_trunc(grain, SnapshotOfRepo.timestamp)
+    date_group = func.date_trunc(grain, SnapshotOfGithub.timestamp)
     # Query: Range of dates
     q1 = Session.query()\
             .add_column( func.distinct(date_group).label('d') )\
@@ -203,16 +196,16 @@ def history__github():
         # Impossible date range
         (min_date,max_date) = datetime.now()+timedelta(days=1),datetime.now()
     # Grouped query
-    S = SnapshotOfRepo
+    S = SnapshotOfGithub
     q = Session.query()\
             .add_column( func.sum(S.watchers) )\
             .add_column( func.max(S.forks) )\
             .add_column( func.max(S.open_issues) )\
             .add_column( func.max(S.size) )\
             .add_column( date_group )\
-            .add_column( S.repo_id )\
+            .add_column( S.repo_name )\
             .group_by(date_group)\
-            .group_by(S.repo_id)\
+            .group_by(S.repo_name)\
             .order_by(date_group.desc())\
             .filter( date_group>=min_date )\
             .filter( date_group<=max_date )\
@@ -226,9 +219,9 @@ def history__github():
         'timestamp':x[4].date().isoformat(),
     }
     for x in q:
-        r = github[ x[5] ]
-        results[r.full_name] = results.get(r.full_name, { 'repo':r.toJson(), 'data':[] })
-        results[r.full_name]['data'].append( _dictize(x) )
+        repo_name = x[5] 
+        results[repo_name] = results.get(repo_name, { 'repo':repo_name, 'data':[] })
+        results[repo_name]['data'].append( _dictize(x) )
     # Inner function transforms SELECT tuple into recognizable format
     response['grain'] = grain
     response['data'] = results
