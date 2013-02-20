@@ -17,7 +17,8 @@ TRACKED_ACCOUNTS =[
     'okfn',
     'okfnlabs',
     'ckanproject',
-    'schoolofdata'
+    'schoolofdata',
+    'TheAnnotator'
     ]
 
 def snapshot_twitteraccounts(verbose=False):
