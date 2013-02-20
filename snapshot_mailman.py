@@ -6,7 +6,7 @@ import requests
 import os
 from lib import util
 from lib.backend import Session
-from lib.backend.model import SnapshotOfMailman2, ActivityInMailman2
+from lib.backend.model import SnapshotOfMailman, ActivityInMailman
 from datetime import datetime,timedelta
 
 def snapshot_mailman(verbose=False):
@@ -14,9 +14,9 @@ def snapshot_mailman(verbose=False):
     today = datetime.now().date()
     for l in lists:
         if verbose: print 'Processing snapshots for %s...' % l['name']
-        latest = Session.query(SnapshotOfMailman2)\
-                .filter(SnapshotOfMailman2.name==l['name'])\
-                .order_by(SnapshotOfMailman2.timestamp.desc())\
+        latest = Session.query(SnapshotOfMailman)\
+                .filter(SnapshotOfMailman.name==l['name'])\
+                .order_by(SnapshotOfMailman.timestamp.desc())\
                 .first()
         # By default, gather 30 days of snapshots
         since = today - timedelta(days=30)
@@ -30,11 +30,11 @@ def snapshot_mailman(verbose=False):
         num_subscribers = len(_scrape_subscribers(roster_url, verbose=verbose))
         # Create a snapshot of each day
         while since<today:
-            posts_today = Session.query(ActivityInMailman2)\
-                            .filter(ActivityInMailman2.list_name==l['name'])\
-                            .filter(ActivityInMailman2.timestamp.between(date,date+day))\
+            posts_today = Session.query(ActivityInMailman)\
+                            .filter(ActivityInMailman.list_name==l['name'])\
+                            .filter(ActivityInMailman.timestamp.between(date,date+day))\
                             .count()
-            sn = SnapshotOfMailman2(\
+            sn = SnapshotOfMailman(\
                     list_name=l['name'],\
                     timestamp=since,\
                     subscribers=num_subscribers,

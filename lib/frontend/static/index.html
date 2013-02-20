@@ -56,35 +56,6 @@ eg: <b>?grain=day</b> returns 7 times as many results as <b>?grain=week</b>.</pr
         <h4>Activity</h4>
         <div class="accordion">
             <div class="accordion-group">
-                <div class="accordion-heading"><a href="#row17" class="accordion-toggle" data-toggle="collapse">
-                /api/1/stream
-                </a></div>
-                <div class="accordion-body collapse" id="row17"><div class="accordion-inner">
-<p class="description">Stream of activity from the last four hours. Each item comes with a standard <b><u>person</u></b> object and an <b><u>_activity_type</u></b> field, which could be <u>'github'</u> or <u>'mailman'</u>.</p>
-<div class="example"><a href="/api/1/stream" title="All user activity">/api/1/stream</a></div>
-<div class="example"><a href="/api/1/stream?opinion=staff" title="Staff activity stream">/api/1/stream?opinion=staff</a></div>
-<div class="example"><a href="/api/1/stream?login=zephod,rgrp&days=7" title="Tom & Rufus' activity from the last 7 days">/api/1/stream?login=zephod,rgrp&days=7</a></div>
-                        <pre style="font-size: 10px;">
-<b>Optional Parameters</b>
-type       Comma seperated activity types.
-           default: github,mailman
-login      Comma seperated user logins.
-           eg. zephod,rgrp
-opinion    Select only users with the given <b>opinion</b>
-           tag in their database entry.
-           eg. staff
-
-<b>Optional History Parameters</b>
-hours      Number of hours of history per page.
-           default: 4 hours
-days       Number of days of history per page.
-           default: 4 hours!
-page       Step backwards through time.
-           (no per_page or last_page is known) </pre>
-                </div></div>
-
-            </div>
-            <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row2" class="accordion-toggle" data-toggle="collapse">
                     <span class="label label-info pull-right">Paginated</span>
                     /api/1/activity/github

@@ -82,8 +82,8 @@ def data__github():
 def data__mailman():
     """Unpaginated -- there are less than 200 entries in the database"""
     response = {'ok' : True}
-    q = Session.query(Mailman).order_by(Mailman.name)
-    response['data'] = [ x.toJson() for x in q ]
+    q = Session.query(SnapshotOfMailman.list_name).distinct()
+    response['data'] = [ x[0] for x in q ]
     response['total'] = q.count()
     return response
 
@@ -120,18 +120,6 @@ def _activitydict_github(act,repo,person):
     out['_activity_type'] = 'github'
     return out
 
-def _activityquery_mailman():
-    return Session.query(ActivityInMailman,Mailman,Person)\
-            .order_by(ActivityInMailman.timestamp.desc())\
-            .filter(Mailman.id==ActivityInMailman.mailman_id)\
-            .filter(Person.email==ActivityInMailman.email)
-def _activitydict_mailman(act,mailman,person):
-    out = act.toJson()
-    out['mailman'] = mailman.toJson()
-    out['person'] = person.toJson()
-    out['_activity_type'] = 'mailman'
-    return out
-
 @endpoint('/activity/github')
 def activity__github():
     select_repos = request.args.get('repo',None)
@@ -148,72 +136,15 @@ def activity__github():
 @endpoint('/activity/mailman')
 def activity__mailman():
     select_lists = request.args.get('list',None)
-    q = _activityquery_mailman()
+    q = Session.query(ActivityInMailman)\
+            .order_by(ActivityInMailman.timestamp.desc())
     if select_lists is not None:
         select_lists = select_lists.split(',') 
-        q = q.filter(func.lower(Mailman.name).in_(select_lists))
+        q = q.filter(func.lower(ActivityInMailman.list_name).in_(select_lists))
     response = _prepare( q.count() )
     q = q.offset(response['offset'])\
             .limit(response['per_page'])
-    response['data'] = [ _activitydict_mailman(x,y,z) for x,y,z in q ]
-    return response
-
-
-
-##################################################
-####           URL: /stream/
-##################################################
-@endpoint('/stream')
-def stream():
-    # Facet by types
-    types=['github','mailman']
-    _types = request.args.get('type',None)
-    if _types is not None:
-        _types = _types.split(',')
-        types = list( set(types).intersection(set(_types)) )
-    # Facet by login
-    _login = request.args.get('login')
-    filter_login = None
-    if _login is not None:
-        _login = _login.split(',')
-        filter_login = Person.login.in_(_login)
-    # Facet by opinion
-    _opinion = request.args.get('opinion')
-    filter_opinion = None
-    if _opinion is not None:
-        filter_opinion = Person._opinion==_opinion
-    # Facet by timestamp range
-    hours = int(request.args.get('hours', 0))
-    days = int(request.args.get('days',0))
-    if not days or hours:
-        hours = 4
-    # Page number 
-    page = int(request.args.get('page',0))
-    d = timedelta(hours=hours,days=days)
-    timestamp_min = datetime.now() - d * (page+1)
-    timestamp_max = timestamp_min + d
-    filter_timestamp = lambda x: x.timestamp.between( timestamp_min, timestamp_max )
-    results = []
-    if 'github' in types:
-        q = _activityquery_github().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(ActivityInGithub) )
-        results += [ _activitydict_github(x,y,z) for x,y,z in q ]
-    if 'mailman' in types:
-        q = _activityquery_mailman().filter( filter_login ).filter( filter_opinion ).filter( filter_timestamp(ActivityInMailman) )
-        results += [ _activitydict_mailman(x,y,z) for x,y,z in q ]
-    results = sorted(results, key = lambda x : x['timestamp'],reverse=True)
-    # Construct a results object 
-    response = { 'ok': True }
-    response['hours'] = hours
-    response['days'] = days
-    response['timestamp_min'] = timestamp_min.isoformat()
-    response['timestamp_max'] = timestamp_max.isoformat()
-    response['type'] = types
-    response['page'] = page
-    response['login'] = _login
-    response['opinion'] = _opinion
-    response['data'] = results
-    next_args = dict(request.args.items() + [('page',page+1)])
-    response['next'] = request.base_url + '?'+urlencode(next_args)
+    response['data'] = [ x.toJson() for x in q ]
     return response
 
 
@@ -384,19 +315,12 @@ def history__facebook():
 @endpoint('/history/mailman')
 def history__mailman():
     grain = _get_grain()
-    # Map of mailman entries
-    mailman = { x.id : x for x in Session.query(Mailman) }
     # Filtered list of mailman IDs
     lists = request.args.get('list')
     listFilter = None
     if lists is not None:
         lists = lists.split(',')
-        ids = []
-        for name in lists:
-            m = filter(lambda x:x.name==name, mailman.values())
-            assert m,'list %s does not exist' % name
-            ids.append(m[0].id)
-        listFilter = SnapshotOfMailman.mailman_id.in_(ids)
+        listFilter = func.lower(SnapshotOfMailman.list_name).in_(lists)
     # Date filter
     date_group = func.date_trunc(grain, SnapshotOfMailman.timestamp)
     # Query: Range of dates
@@ -418,9 +342,9 @@ def history__mailman():
             .add_column( func.sum(S.posts_today) )\
             .add_column( func.max(S.subscribers) )\
             .add_column( date_group )\
-            .add_column( S.mailman_id )\
+            .add_column( S.list_name )\
             .group_by(date_group)\
-            .group_by(S.mailman_id)\
+            .group_by(S.list_name)\
             .order_by(date_group.desc())\
             .filter( date_group>=min_date )\
             .filter( date_group<=max_date )\
@@ -434,9 +358,9 @@ def history__mailman():
     }
     # Build output datastructure from rows
     for x in q:
-        m = mailman[ x[3] ]
-        results[m.name] = results.get(m.name, { 'mailman':m.toJson(), 'data':[] })
-        results[m.name]['data'].append( _dictize(x) )
+        list_name = x[3]
+        results[list_name] = results.get(list_name, { 'list_name':list_name, 'data':[] })
+        results[list_name]['data'].append( _dictize(x) )
     # Write response
     response['grain'] = grain
     response['data'] = results
@@ -444,8 +368,6 @@ def history__mailman():
     response['min_date'] = min_date.isoformat()
     response['max_date'] = max_date.isoformat()
     return response
-
-
 
 
 @endpoint('/history/mailchimp')

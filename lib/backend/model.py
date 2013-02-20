@@ -61,25 +61,6 @@ class SnapshotOfRepo(Base):
         }
 
 
-class Mailman(Base):
-    __tablename__='mailman'
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    link = Column(String)
-    description = Column(String)
-    def __init__(self, name, link, description):
-        self.update(name,link,description)
-    def update(self, name, link, description):
-        self.name = name
-        self.link = link
-        self.description = description
-    def toJson(self):
-        return {
-                'name': self.name,
-                'link': self.link,
-                'description': self.description,
-                }
-
 class SnapshotOfFacebook(Base):
     __tablename__='snapshot_facebook'
     timestamp = Column(Date, primary_key=True) 
@@ -104,24 +85,6 @@ class SnapshotOfMailchimp(Base):
 
 class SnapshotOfMailman(Base):
     __tablename__='snapshot_mailman'
-    mailman_id = Column(Integer, ForeignKey('mailman.id'), primary_key=True)
-    timestamp = Column(Date, primary_key=True) 
-    subscribers = Column(Integer)
-    posts_today = Column(Integer)
-    def __init__(self, timestamp, mailman_id, subscribers, posts_today):
-        self.mailman_id = mailman_id
-        self.timestamp = timestamp
-        self.subscribers = subscribers
-        self.posts_today = posts_today
-    def toJson(self):
-        return {
-            'timestamp': self.timestamp.isoformat(),
-            'subscribers': self.subscribers,
-            'posts_today': self.posts_today,
-        }
-
-class SnapshotOfMailman2(Base):
-    __tablename__='snapshot_mailman2'
     list_name = Column(String, primary_key=True)
     timestamp = Column(Date, primary_key=True) 
     subscribers = Column(Integer)
@@ -188,33 +151,6 @@ class Person(Base):
 
 class ActivityInMailman(Base):
     __tablename__='activity_mailman'
-    mailman_id  = Column(Integer, primary_key=True)
-    message_id = Column(Integer, primary_key=True)
-    subject = Column(String)
-    author = Column(String)
-    email = Column(String)
-    link = Column(String)
-    timestamp = Column(DateTime)
-    def __init__(self, mailman_id, message_id, subject, author, email, link, timestamp):
-        self.mailman_id = mailman_id
-        self.message_id = message_id
-        self.subject = subject
-        self.author = author
-        self.email = email
-        self.link = link
-        self.timestamp = timestamp
-    def toJson(self):
-        return {
-            'message_id' : self.message_id,
-            'subject' : self.subject,
-            'author' : self.author,
-            'email' : self.email,
-            'link' : self.link,
-            'timestamp' : self.timestamp.isoformat(),
-        }
-
-class ActivityInMailman2(Base):
-    __tablename__='activity_mailman2'
     listname  = Column(String, primary_key=True)
     message_id = Column(Integer, primary_key=True)
     subject = Column(String)
