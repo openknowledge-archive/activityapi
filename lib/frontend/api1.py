@@ -268,8 +268,8 @@ def history__mailman():
     lists = request.args.get('list')
     listFilter = None
     if lists is not None:
-        lists = lists.split(',')
-        listFilter = func.lower(SnapshotOfMailman.list_name).in_(lists)
+        lists = lists.split(',') 
+        listFilter = SnapshotOfMailman.list_name.in_(lists)
     # Date filter
     date_group = func.date_trunc(grain, SnapshotOfMailman.timestamp)
     # Query: Range of dates
