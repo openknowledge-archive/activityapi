@@ -3,7 +3,7 @@
 import argparse
 from lxml import html
 import requests
-from lib import uil
+from lib import util
 from lib.backend import Session
 from lib.backend.model import ActivityInMailman
 from datetime import datetime
@@ -13,17 +13,17 @@ def get_activity(verbose=False):
     for l in lists:
         if verbose: print 'Processing activity for %s...' % l['name']
         latest = Session.query(ActivityInMailman)\
-                .filter(ActivityInMailman.list_name==l['name']
+                .filter(ActivityInMailman.list_name==l['name'])\
                 .order_by(ActivityInMailman.message_id.desc())\
                 .first()
         # Walk through message history from the web front-end
         archive_url = l['link'].replace('mailman/listinfo','pipermail')
-        limit = 100
+        limit = 1000
         latest_id = latest.message_id if latest else -1
         for msg in _yield_messages(archive_url,latest_id, verbose=verbose):
             if verbose: print '  -> got msg #%d (%s: "%s")' % (msg['id'],msg['email'],msg['subject'])
             Session.add( ActivityInMailman(
-                listname  = l['name'],
+                list_name  = l['name'],
                 message_id = msg['id'], 
                 subject = msg['subject'],
                 author = msg['author'],
@@ -31,9 +31,9 @@ def get_activity(verbose=False):
                 link = msg['link'],
                 timestamp = msg['date'] ) )
             limit -= 1
-            if limit==0: 
-                if verbose: print '  -> Reached activity limit (100)'
-                break;
+            #if limit==0: 
+            #if verbose: print '  -> Reached activity limit (100)'
+            #break;
         Session.commit()
 
 def _yield_messages(url, latest_id, verbose=False):

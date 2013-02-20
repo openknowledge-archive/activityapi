@@ -15,13 +15,13 @@ def snapshot_mailman(verbose=False):
     for l in lists:
         if verbose: print 'Processing snapshots for %s...' % l['name']
         latest = Session.query(SnapshotOfMailman)\
-                .filter(SnapshotOfMailman.name==l['name'])\
+                .filter(SnapshotOfMailman.list_name==l['name'])\
                 .order_by(SnapshotOfMailman.timestamp.desc())\
                 .first()
         # By default, gather 30 days of snapshots
-        since = today - timedelta(days=30)
+        since = today - timedelta(days=180)
         if latest:
-            if latest.timestamp>=until:
+            if latest.timestamp>=today:
                 if verbose: print ' -> most recent snapshots have already been processed.'
                 continue
             since = latest.timestamp + timedelta(days=1)
@@ -32,7 +32,7 @@ def snapshot_mailman(verbose=False):
         while since<today:
             posts_today = Session.query(ActivityInMailman)\
                             .filter(ActivityInMailman.list_name==l['name'])\
-                            .filter(ActivityInMailman.timestamp.between(date,date+day))\
+                            .filter(ActivityInMailman.timestamp.between(since,since+timedelta(days=1)))\
                             .count()
             sn = SnapshotOfMailman(\
                     list_name=l['name'],\

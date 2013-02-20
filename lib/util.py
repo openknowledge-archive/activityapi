@@ -1,3 +1,5 @@
+from lxml import html
+import requests
 
 def list_mailman_lists(verbose=False):
     """Scrape the server for a catalogue of all mailman lists."""

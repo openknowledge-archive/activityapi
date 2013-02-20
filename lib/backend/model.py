@@ -151,7 +151,7 @@ class Person(Base):
 
 class ActivityInMailman(Base):
     __tablename__='activity_mailman'
-    listname  = Column(String, primary_key=True)
+    list_name  = Column(String, primary_key=True)
     message_id = Column(Integer, primary_key=True)
     subject = Column(String)
     author = Column(String)
