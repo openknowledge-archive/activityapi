@@ -56,27 +56,12 @@ eg: <b>?grain=day</b> returns 7 times as many results as <b>?grain=week</b>.</pr
         <h4>Activity</h4>
         <div class="accordion">
             <div class="accordion-group">
-                <div class="accordion-heading"><a href="#row2" class="accordion-toggle" data-toggle="collapse">
-                    <span class="label label-info pull-right">Paginated</span>
-                    /api/1/activity/github
-                </a></div>
-                <div class="accordion-body collapse" id="row2"><div class="accordion-inner">
-<p class="description">Stream of events occurring on tracked Github repositories. Each event contains a standard <b><u>person</u></b> object and a standard <b><u>repo</b></u> object.</p>
-<div class="example"><a href="/api/1/activity/github" title="All activity on OKFN-owned repositories">/api/1/activity/github</a></div>
-<div class="example"><a href="/api/1/activity/github?repo=okfn/annotator,okfn/recline" title="All activity on the Annotator and Recline repositories">/api/1/activity/github?repo=okfn/annotator,okfn/recline</a></div>
-                        <pre style="font-size: 10px;">
-<b>Optional Parameters</b>
-repo    Comma seperated names of repositories.
-        eg: okfn/ckanext-harvest,okfn/ckanext-dgu</pre>
-                </div></div>
-            </div>
-            <div class="accordion-group">
                 <div class="accordion-heading"><a href="#row3" class="accordion-toggle" data-toggle="collapse">
                 <span class="label label-info pull-right">Paginated</span>
                 /api/1/activity/mailman
                 </a></div>
                 <div class="accordion-body collapse" id="row3"><div class="accordion-inner">
-<p class="description">Stream of emails sent to OKFN's Mailman mailing lists. Each email event contains a standard <b><u>person</u></b> object and a standard <b><u>list</b></u> object.</p>
+<p class="description">Stream of emails sent to OKFN's Mailman mailing lists.</p>
 <div class="example"><a href="/api/1/activity/mailman" title="All activity on OKFN's mailing lists">/api/1/activity/mailman</a></div>
 <div class="example"><a href="/api/1/activity/mailman?list=ckan-dev,ckan-discuss" title="All activity on the public CKAN mailing lists">/api/1/activity/mailman?list=ckan-dev,ckan-discuss</a></div>
                         <pre style="font-size: 10px;">

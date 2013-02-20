@@ -86,53 +86,9 @@ def data__mailman():
     response['data'] = [ x[0] for x in q ]
     response['total'] = q.count()
     return response
-
-@endpoint('/data/person')
-def data__person():
-    opinion = request.args.get('opinion',None)
-    login = request.args.get('login',None)
-    q = Session.query(Person).order_by(Person.user_id.desc())
-    if opinion is not None:
-        if opinion=='': opinion = None
-        q = q.filter(Person._opinion==opinion)
-    if login is not None:
-        login = login.split(',')
-        q = q.filter(Person.login.in_(login))
-    response = _prepare(q.count())
-    q = q.offset(response['offset'])\
-        .limit(response['per_page'])
-    response['data'] = [ person.toJson() for person in q ] 
-    return response
-
-
 ##################################################
 ####           URLS: /activity/...
 ##################################################
-def _activityquery_github():
-    return Session.query(ActivityInGithub,Repo,Person)\
-            .order_by(ActivityInGithub.timestamp.desc())\
-            .filter(Repo.full_name==ActivityInGithub.repo)\
-            .filter(Person.id==ActivityInGithub.user_id)
-def _activitydict_github(act,repo,person):
-    out = act.toJson()
-    out['repo'] = repo.toJson()
-    out['person'] = person.toJson()
-    out['_activity_type'] = 'github'
-    return out
-
-@endpoint('/activity/github')
-def activity__github():
-    select_repos = request.args.get('repo',None)
-    q = _activityquery_github()
-    if select_repos is not None:
-        select_repos = select_repos.split(',')
-        q = q.filter(Repo.full_name.in_(select_repos))
-    response = _prepare( q.count() )
-    q = q.offset(response['offset'])\
-            .limit(response['per_page'])
-    response['data'] = [ _activitydict_github(x,y,z) for x,y,z in q ]
-    return response
-
 @endpoint('/activity/mailman')
 def activity__mailman():
     select_lists = request.args.get('list',None)
