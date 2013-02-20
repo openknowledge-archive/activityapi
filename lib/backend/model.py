@@ -6,7 +6,7 @@ import json
 Base = declarative_base(bind=engine)
 
 class SnapshotOfGithub(Base):
-    __tablename__='snapshot_github2'
+    __tablename__='snapshot_github'
     repo_name = Column(String,primary_key=True)
     timestamp = Column(Date, primary_key=True) 
     open_issues = Column(Integer)
