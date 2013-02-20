@@ -381,24 +381,3 @@ def history__mailchimp():
     response['min_date'] = min_date.isoformat()
     response['max_date'] = max_date.isoformat()
     return response
-
-
-
-##################################################
-####           URLS: /debug/...
-##################################################
-
-@endpoint('/debug/request')
-def debug__request():
-    """Dump the user's request back at them"""
-    return {
-            'base_url' : request.base_url,
-            'url_root' : request.url_root,
-            'path' : request.path,
-            'method' : request.method,
-            'headers' : {k:v for k,v in request.headers.iteritems()},
-            'args' : request.args,
-            'form' : request.form,
-            'view_args' : request.view_args,
-    }
-
