@@ -69,6 +69,15 @@ def index():
 ##################################################
 ####           URLS: /data/...
 ##################################################
+@endpoint('/data/analytics')
+def data__analytics():
+    """Unpaginated -- there are less than 200 entries in the database"""
+    response = {'ok' : True}
+    q = Session.query(SnapshotOfAnalytics.website).distinct().order_by(SnapshotOfAnalytics.website)
+    response['data'] = [ x[0] for x in q ]
+    response['total'] = q.count()
+    return response
+
 @endpoint('/data/github')
 def data__github():
     """Unpaginated -- there are less than 200 entries in the database"""
@@ -107,6 +116,55 @@ def activity__mailman():
 ##################################################
 ####           URLS: /history/...
 ##################################################
+@endpoint('/history/analytics')
+def history__analytics():
+    grain = _get_grain()
+    websites = request.args.get('website',None)
+    # Filter by account name
+    websitefilter = None
+    if websites is not None:
+        websites = websites.split(',')
+        websitefilter = SnapshotOfAnalytics.website.in_(websites)
+    # Query: Range of dates
+    date_group = func.date_trunc(grain, SnapshotOfAnalytics.timestamp)
+    q1 = Session.query()\
+            .add_column( func.distinct(date_group).label('d') )\
+            .order_by(date_group.desc())
+    response = _prepare(q1.count())
+    q1 = q1.offset( response['offset'] )\
+            .limit( response['per_page'] )
+    if q1.count():
+        date_column = q1.subquery().columns.d
+        (min_date,max_date) = Session.query(func.min(date_column), func.max(date_column)).first()
+    else:
+        # Impossible date range
+        (min_date,max_date) = datetime.now()+timedelta(days=1),datetime.now()
+    # Grouped query
+    S = SnapshotOfAnalytics
+    q = Session.query()\
+            .add_column( func.sum(S.hits) )\
+            .add_column( date_group )\
+            .add_column( S.website )\
+            .group_by(date_group)\
+            .group_by(S.website)\
+            .order_by(date_group.desc())\
+            .filter( date_group>=min_date )\
+            .filter( date_group<=max_date )\
+            .filter( websitefilter )
+    results = {}
+    _dictize = lambda x: {
+        'hits':x[0],
+        'timestamp':x[1].date().isoformat(),
+    }
+    for x in q:
+        website = x[2]
+        x = _dictize(x)
+        results[website] = results.get(website, { 'website':website,'data':[] })
+        results[website]['data'].append(x)
+    response['data'] = results
+    response['grain'] = grain
+    return response
+
 @endpoint('/history/twitter')
 def history__twitter():
     grain = _get_grain()
