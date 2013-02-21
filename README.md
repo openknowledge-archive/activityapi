@@ -59,7 +59,7 @@ http://okfnlabs.org/dashboard
 
 ## Hooking up to Heroku
 
-The system is deployed on Heroku. `Procfile` declares the web frontend to be run. The Scheduler add-on runs each of the `scrape_*.py` scripts at regular intervals to keep the database up-to-date.
+The system is deployed on Heroku. `Procfile` declares the web frontend to be run. The Scheduler add-on runs each of the `snapshot_*.py` and `getactivity_*.py` scripts at regular intervals to keep the database up-to-date.
 
 Installation:
 
