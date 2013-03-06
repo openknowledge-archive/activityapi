@@ -214,7 +214,7 @@ def history__twitter():
         x = _dictize(x)
         name = x['screen_name']
         if not (name in results):
-            latest = Session.query(S).order_by(S.timestamp.desc()).first()
+            latest = Session.query(S).filter(S.screen_name==name).order_by(S.timestamp.desc()).first()
             results[name] = { 
                     'account':{
                         'screen_name':name,
