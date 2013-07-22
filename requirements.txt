@@ -9,10 +9,10 @@ feedparser==5.1.2
 google-api-python-client==1.0
 httplib2==0.7.7
 lxml==3.0
+newrelic==1.13.1.31
 postmonkey==1.0a4
 psycopg2==2.4.2
 python-gflags==2.0
 python-googleanalytics==1.0.2
 requests==0.13.5
-tweepy==1.10
-newrelic
+tweepy==2.1
