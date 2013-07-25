@@ -1,35 +1,37 @@
 #!/usr/bin/env python 
 
 import argparse
-import tweepy
-import os
 import re
 from lib.backend import Session
 from lib.backend.model import SnapshotOfTwitterAccount
 from sqlalchemy import func
 from datetime import datetime,timedelta
+import twitter
+import os
 
-TRACKED_ACCOUNTS =[
-    'lod2project',
-    'openspending',
-    'reclinejs',
-    'okfestival',
-    'okfn',
-    'okfnlabs',
-    'ckanproject',
-    'schoolofdata',
-    'TheAnnotator'
-    ]
+def open_api():
+    # Connect to a twitter account as configured in the environment
+    api = twitter.Api(consumer_key=os.getenv('TWITTER_CONSUMER_KEY'),
+                      consumer_secret=os.getenv('TWITTER_CONSUMER_SECRET'),
+                      access_token_key=os.getenv('TWITTER_ACCESS_TOKEN'),
+                      access_token_secret=os.getenv('TWITTER_ACCESS_SECRET'))
+    api.VerifyCredentials()
+    return api
 
 def snapshot_twitteraccounts(verbose=False):
     """Create today's SnapshotOfTwitterAccounts"""
-    api = tweepy.API()
-    for screen_name in TRACKED_ACCOUNTS:
-        if verbose: print 'Scraping %s...' % screen_name
-        u = api.get_user(screen_name)
-        followers = u.followers_count
-        following = u.friends_count
-        tweets = u.statuses_count
+    api = open_api()
+    friends = api.GetFriends()
+
+    for friend in friends:
+        if verbose: print 'Scraping %s...' % friend.screen_name
+        screen_name = friend.screen_name.lower()
+        if screen_name=='theannotator':
+            # legacy reasons
+            screen_name = 'TheAnnotator'
+        followers = friend.followers_count
+        following = friend.friends_count
+        tweets = friend.statuses_count
         today = datetime.now().date()
         # How long since we scraped this account?
         latest = Session.query(SnapshotOfTwitterAccount)\
