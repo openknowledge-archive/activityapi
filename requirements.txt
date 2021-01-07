@@ -8,7 +8,7 @@ facebook-sdk==0.4.0
 feedparser==5.1.2
 google-api-python-client==1.0
 httplib2==0.7.7
-lxml==3.0
+lxml==4.6.2
 newrelic==1.13.1.31
 postmonkey==1.0a4
 psycopg2==2.4.2
