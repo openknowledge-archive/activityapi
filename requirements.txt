@@ -1,5 +1,5 @@
 Flask==0.9
-Jinja2==2.6
+Jinja2==2.11.3
 PyGithub==1.4
 SQLAlchemy==0.7.2
 Werkzeug==0.8.3
